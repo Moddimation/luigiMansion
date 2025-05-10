@@ -1,6 +1,5 @@
-#include <dolphin/card.h>
-
 #include <dolphin.h>
+#include <dolphin/card.h>
 
 #include "CARDPrivate.h"
 
@@ -56,7 +55,7 @@ __CARDRead (s32 chan, u32 addr, long length, void* dst, void (*callback) (long, 
         return CARD_RESULT_NOCARD;
     }
     card->xferCallback = callback;
-    card->repeat = (length / 512u);
+    card->repeat = (int)(length / 512u);
     card->addr = addr;
     card->buffer = dst;
     return __CARDReadSegment (chan, BlockReadCallback);
@@ -109,7 +108,7 @@ __CARDWrite (s32 chan, u32 addr, long length, void* dst, void (*callback) (long,
         return CARD_RESULT_NOCARD;
     }
     card->xferCallback = callback;
-    card->repeat = (length / 128u);
+    card->repeat = (int)(length / 128u);
     card->addr = addr;
     card->buffer = dst;
     return __CARDWritePage (chan, BlockWriteCallback);

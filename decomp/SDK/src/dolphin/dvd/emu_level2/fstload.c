@@ -1,5 +1,7 @@
 #include <dolphin.h>
 
+#include <string.h>
+
 #include "dvd_private.h"
 
 static u32 status;         // size: 0x4, address: 0x0
@@ -35,8 +37,8 @@ cb (s32 result, DVDCommandBlock* block)
                 status = 2;                // next read fst
                 DVDReadAbsAsyncForBS (block,
                                       bb2->FSTAddress,
-                                      (bb2->FSTLength + 0x1F) & 0xFFFFFFE0,
-                                      bb2->FSTPosition,
+                                      (s32)((bb2->FSTLength + 0x1F) & 0xFFFFFFE0),
+                                      (s32)bb2->FSTPosition,
                                       cb);
             default:
                 return;

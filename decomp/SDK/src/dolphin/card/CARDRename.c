@@ -1,7 +1,7 @@
 #include <dolphin/card.h>
 #include <dolphin/os.h>
 
-#include <dolphin.h>
+#include <string.h>
 
 #include "CARDPrivate.h"
 

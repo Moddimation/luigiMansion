@@ -1,6 +1,6 @@
 #include <dolphin/card.h>
 
-#include <dolphin.h>
+#include <string.h>
 
 #include "../os/OSPrivate.h"
 #include "CARDPrivate.h"
@@ -25,7 +25,8 @@ FormatCallback (s32 chan, s32 result)
     ++card->formatStep;
     if (card->formatStep < CARD_NUM_SYSTEM_BLOCK)
     {
-        result = __CARDEraseSector (chan, (u32)card->sectorSize * card->formatStep, FormatCallback);
+        result =
+            __CARDEraseSector (chan, (u32)card->sectorSize * card->formatStep, FormatCallback);
         if (result >= 0)
         {
             return;

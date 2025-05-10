@@ -1,6 +1,6 @@
 #include <dolphin/card.h>
 
-#include <dolphin.h>
+#include <string.h>
 
 #include "CARDPrivate.h"
 
@@ -82,10 +82,7 @@ __CARDSetStatusExAsync (s32             chan,
         {
             continue;
         }
-        while ((++p) < (u8*)&dirent->time)
-        {
-            *p = 0;
-        }
+        while ((++p) < (u8*)&dirent->time) { *p = 0; }
         break;
     }
     if ((memcmp (&ent->fileName, &dirent->fileName, 32) != 0) ||

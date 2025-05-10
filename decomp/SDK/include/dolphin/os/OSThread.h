@@ -58,23 +58,23 @@ struct OSThread
     OSThreadQueue* queue;                ///< 0x2DC queue thread is on
     OSThreadLink   link;                 ///< 0x2E0 queue link
 
-    OSThreadQueue queueJoin;             ///< 0x2E8 list of threads waiting for termination (join)
+    OSThreadQueue queueJoin; ///< 0x2E8 list of threads waiting for termination (join)
 
-    OSMutex*     mutex;                  ///< 0x2F0 mutex trying to lock
-    OSMutexQueue queueMutex;             ///< 0x2F4 list of mutexes owned
+    OSMutex*     mutex;      ///< 0x2F0 mutex trying to lock
+    OSMutexQueue queueMutex; ///< 0x2F4 list of mutexes owned
 
-    OSThreadLink linkActive;             ///< 0x2FC link of all threads for debugging
+    OSThreadLink linkActive; ///< 0x2FC link of all threads for debugging
 
-    u8*  stackBase;                      ///< 0x304 the thread's designated stack (high address)
-    u32* stackEnd;                       ///< 0x308 last word of stack (low address)
+    u8*  stackBase;          ///< 0x304 the thread's designated stack (high address)
+    u32* stackEnd;           ///< 0x308 last word of stack (low address)
 };
 
 // Thread states
 enum OS_THREAD_STATE
 {
-    OS_THREAD_STATE_READY = 1,
-    OS_THREAD_STATE_RUNNING = 2,
-    OS_THREAD_STATE_WAITING = 4,
+    OS_THREAD_STATE_READY    = 1,
+    OS_THREAD_STATE_RUNNING  = 2,
+    OS_THREAD_STATE_WAITING  = 4,
     OS_THREAD_STATE_MORIBUND = 8
 };
 
@@ -114,10 +114,13 @@ OSPriority OSGetThreadPriority (OSThread* thread);
 void       OSSleepThread (OSThreadQueue* queue);
 void       OSWakeupThread (OSThreadQueue* queue);
 
-OSThread* OSSetIdleFunction (OSIdleFunction idleFunction, void* param, void* stack, u32 stackSize);
+OSThread* OSSetIdleFunction (OSIdleFunction idleFunction,
+                             void*          param,
+                             void*          stack,
+                             u32            stackSize);
 OSThread* OSGetIdleFunction (void);
 
-long OSCheckActiveThreads (void);
+s32 OSCheckActiveThreads (void);
 
 #ifdef __cplusplus
 }

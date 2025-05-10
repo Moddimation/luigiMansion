@@ -1,13 +1,9 @@
-#include "dolphin/os/OSAlarm.h"
 #include <dolphin/card.h>
 #include <dolphin/os.h>
 
-#include <dolphin.h>
-
-#include "../os/OSPrivate.h"
 #include "CARDPrivate.h"
 
-struct CARDControl __CARDBlock[2];
+CARDControl __CARDBlock[2];
 
 DVDDiskID* __CARDDiskID;
 DVDDiskID  __CARDDiskNone;
@@ -24,12 +20,17 @@ static OSResetFunctionInfo ResetFunctionInfo = { OnReset, 127 };
 void
 __CARDDefaultApiCallback (s32 chan, s32 result)
 {
+#pragma unused(chan)
+#pragma unused(result)
 }
 
 void
 __CARDSyncCallback (s32 chan, s32 result)
 {
-    struct CARDControl* card;
+#pragma unused(chan)
+#pragma unused(result)
+
+    CARDControl* card;
 
     card = &__CARDBlock[chan];
     OSWakeupThread (&card->threadQueue);
@@ -38,6 +39,9 @@ __CARDSyncCallback (s32 chan, s32 result)
 void
 __CARDExtHandler (s32 chan, OSContext* context)
 {
+#pragma unused(chan)
+#pragma unused(context)
+
     CARDControl* card;
     CARDCallback callback;
 
@@ -71,6 +75,8 @@ __CARDExtHandler (s32 chan, OSContext* context)
 void
 __CARDExiHandler (s32 chan, OSContext* context)
 {
+#pragma unused(context)
+
     CARDControl* card;
     CARDCallback callback;
     u8           status;
@@ -93,7 +99,8 @@ __CARDExiHandler (s32 chan, OSContext* context)
         goto fatal;
     }
 
-    if ((result = __CARDReadStatus (chan, &status)) < 0 || (result = __CARDClearStatus (chan)) < 0)
+    if ((result = __CARDReadStatus (chan, &status)) < 0 ||
+        (result = __CARDClearStatus (chan)) < 0)
     {
         goto error;
     }
@@ -125,6 +132,8 @@ fatal:
 void
 __CARDTxHandler (s32 chan, OSContext* context)
 {
+#pragma unused(context)
+
     CARDControl* card;
     CARDCallback callback;
     int          err;
@@ -145,6 +154,8 @@ __CARDTxHandler (s32 chan, OSContext* context)
 void
 __CARDUnlockedHandler (s32 chan, OSContext* context)
 {
+#pragma unused(context)
+
     CARDControl* card;
     CARDCallback callback;
 
@@ -307,6 +318,8 @@ __CARDWakeup (s32 chan)
 static void
 TimeoutHandler (OSAlarm* alarm, OSContext* context)
 {
+#pragma unused(context)
+
     s32          chan;
     CARDControl* card;
     CARDCallback callback;
@@ -396,7 +409,7 @@ Retry (s32 chan)
     if (!EXIDma (chan,
                  card->buffer,
                  (s32)((card->cmd[0] == 0x52) ? 512 : 128),
-                 card->mode,
+                 (u32)card->mode,
                  __CARDTxHandler))
     {
         EXIDeselect (chan);
@@ -462,6 +475,7 @@ __CARDStart (s32 chan, CARDCallback txCallback, CARDCallback exiCallback)
 {
     CARDControl* card;
     s32          result;
+#pragma unused(result)
 
     ASSERTLINE (0x2C5, 0 <= chan && chan < 2);
 
@@ -545,7 +559,7 @@ __CARDReadSegment (s32 chan, CARDCallback callback)
                    (u8*)card->workArea + sizeof (CARDID),
                    card->latency,
                    1) || // XXX use DMA if possible
-        !EXIDma (chan, card->buffer, 512, card->mode, __CARDTxHandler))
+        !EXIDma (chan, card->buffer, 512, (u32)card->mode, __CARDTxHandler))
     {
         card->txCallback = NULL;
         EXIDeselect (chan);
@@ -585,7 +599,7 @@ __CARDWritePage (s32 chan, CARDCallback callback)
         return result;
     }
     if (!EXIImmEx (chan, card->cmd, card->cmdlen, 1) ||
-        !EXIDma (chan, card->buffer, 128, card->mode, __CARDTxHandler))
+        !EXIDma (chan, card->buffer, 128, (u32)card->mode, __CARDTxHandler))
     {
         card->exiCallback = 0;
         EXIDeselect (chan);
@@ -857,7 +871,7 @@ CARDGetSectorSize (s32 chan, u32* size)
     {
         return result;
     }
-    *size = card->sectorSize;
+    *size = (u32)card->sectorSize;
     return __CARDPutControlBlock (card, 0);
 }
 
@@ -870,10 +884,7 @@ __CARDSync (s32 chan)
 
     block = &__CARDBlock[chan];
     enabled = OSDisableInterrupts();
-    while ((result = CARDGetResultCode (chan)) == -1)
-    {
-        OSSleepThread (&block->threadQueue);
-    }
+    while ((result = CARDGetResultCode (chan)) == -1) { OSSleepThread (&block->threadQueue); }
     OSRestoreInterrupts (enabled);
     return result;
 }

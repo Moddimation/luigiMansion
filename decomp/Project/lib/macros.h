@@ -58,6 +58,10 @@
 	(void*)0; (void*)0; (void*)0; (void*)0; (void*)0; (void*)0; (void*)0; (void*)0; (void*)0; (void*)0;
 // clang-format on
 
+#define TRUNC(n, a)                     (((u32)(n)) & ~((a) - 1))
+
+#define OFFSET(addr, align)             (((u32)(addr) & ((align) - 1)))
+
 #define PATH_MAX                        (256)
 
 // Sets specific flag to 1
@@ -141,6 +145,7 @@
 #define __PPC_EABI__
 #endif
 
+#define __builtin_va_info
 #define __option(x)   0
 #define __declspec(x) 0
 #define __frsqrte(x)  0

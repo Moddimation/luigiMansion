@@ -1,12 +1,9 @@
 #include <dolphin/card.h>
 #include <dolphin/os.h>
 
-#include <dolphin.h>
+#include <string.h>
 
 #include "CARDPrivate.h"
-
-// functions
-static void UpdateIconOffsets (CARDDir* ent, CARDStat* stat);
 
 static void
 UpdateIconOffsets (CARDDir* ent, CARDStat* stat)
@@ -119,6 +116,7 @@ CARDGetStatus (s32 chan, s32 fileNo, CARDStat* stat)
 
         UpdateIconOffsets (ent, stat);
     }
+
     return __CARDPutControlBlock (card, result);
 }
 
@@ -172,6 +170,7 @@ CARDSetStatusAsync (s32 chan, s32 fileNo, CARDStat* stat, CARDCallback callback)
     {
         __CARDPutControlBlock (card, result);
     }
+
     return result;
 }
 
@@ -184,5 +183,6 @@ CARDSetStatus (s32 chan, long fileNo, struct CARDStat* stat)
     {
         return result;
     }
+
     return __CARDSync (chan);
 }

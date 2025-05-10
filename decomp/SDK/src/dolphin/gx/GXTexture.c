@@ -1,7 +1,8 @@
-#include <macros.h>
-
 #include <dolphin/gx.h>
 #include <dolphin/os.h>
+#include <macros.h>
+
+#include <string.h>
 
 #include "GXPrivate.h"
 
@@ -118,7 +119,7 @@ GXGetTexBufferSize (u16 width, u16 height, u32 format, u8 mipmap, u8 max_lod)
     ASSERTMSGLINEV (0x194, width <= 1024, "%s: width too large", "GXGetTexBufferSize");
     ASSERTMSGLINEV (0x195, height <= 1024, "%s: height too large", "GXGetTexBufferSize");
 
-    __GXGetTexTileShift (format, &tileShiftX, &tileShiftY);
+    __GXGetTexTileShift ((GXTexFmt)format, &tileShiftX, &tileShiftY);
     if (format == GX_TF_RGBA8 || format == GX_TF_Z24X8)
     {
         tileBytes = 64;
@@ -129,9 +130,12 @@ GXGetTexBufferSize (u16 width, u16 height, u32 format, u8 mipmap, u8 max_lod)
     }
     if (mipmap == 1)
     {
-        nx = 1 << (31 - __cntlzw (width));
-        ASSERTMSGLINEV (0x1A7, width == nx, "%s: width must be a power of 2", "GXGetTexBufferSize");
-        ny = 1 << (31 - __cntlzw (height));
+        nx = (u32)(1 << (31 - __cntlzw (width)));
+        ASSERTMSGLINEV (0x1A7,
+                        width == nx,
+                        "%s: width must be a power of 2",
+                        "GXGetTexBufferSize");
+        ny = (u32)(1 << (31 - __cntlzw (height)));
         ASSERTMSGLINEV (0x1AA,
                         height == ny,
                         "%s: height must be a power of 2",
@@ -140,21 +144,21 @@ GXGetTexBufferSize (u16 width, u16 height, u32 format, u8 mipmap, u8 max_lod)
         bufferSize = 0;
         for (level = 0; level < max_lod; level++)
         {
-            nx = (width + (1 << tileShiftX) - 1) >> tileShiftX;
-            ny = (height + (1 << tileShiftY) - 1) >> tileShiftY;
+            nx = (u32)((width + (1 << tileShiftX) - 1) >> tileShiftX);
+            ny = (u32)((height + (1 << tileShiftY) - 1) >> tileShiftY);
             bufferSize += tileBytes * (nx * ny);
             if (width == 1 && height == 1)
             {
                 break;
             }
-            width = (width > 1) ? width >> 1 : 1;
-            height = (height > 1) ? height >> 1 : 1;
+            width = (u16)((width > 1) ? width >> 1 : 1);
+            height = (u16)((height > 1) ? height >> 1 : 1);
         }
     }
     else
     {
-        nx = (width + (1 << tileShiftX) - 1) >> tileShiftX;
-        ny = (height + (1 << tileShiftY) - 1) >> tileShiftY;
+        nx = (u32)((width + (1 << tileShiftX) - 1) >> tileShiftX);
+        ny = (u32)((height + (1 << tileShiftY) - 1) >> tileShiftY);
         bufferSize = nx * ny * tileBytes;
     }
     return bufferSize;
@@ -178,9 +182,9 @@ __GetImageTileCount (enum _GXTexFmt fmt,
     if (ht == 0)
         ht = 1;
 
-    *rowTiles = (wd + (1 << texRowShift) - 1) >> texRowShift;
-    *colTiles = (ht + (1 << texColShift) - 1) >> texColShift;
-    *cmpTiles = (fmt == GX_TF_RGBA8 || fmt == GX_TF_Z24X8) ? 2 : 1;
+    *rowTiles = (u32)((wd + (1 << texRowShift) - 1) >> texRowShift);
+    *colTiles = (u32)((ht + (1 << texColShift) - 1) >> texColShift);
+    *cmpTiles = (fmt == GX_TF_RGBA8 || fmt == GX_TF_Z24X8) ? (u32)2 : (u32)1;
 }
 
 void
@@ -215,7 +219,10 @@ GXInitTexObj (GXTexObj*     obj,
     if (wrap_t != GX_CLAMP || mipmap != 0)
     {
         u32 mask = 1 << (31 - __cntlzw (height));
-        ASSERTMSGLINEV (0x212, height == mask, "%s: height must be a power of 2", "GXInitTexObj");
+        ASSERTMSGLINEV (0x212,
+                        height == mask,
+                        "%s: height must be a power of 2",
+                        "GXInitTexObj");
     }
 #endif
     memset (t, 0, 0x20);
@@ -820,7 +827,11 @@ GXInitTexCacheRegion (GXTexRegion*   region,
             WidthExp2 = 5;
             break;
         default:
-            ASSERTMSGLINEV (0x4E6, 0, "%s: Invalid %s size", "GXInitTexCacheRegion", "tmem even");
+            ASSERTMSGLINEV (0x4E6,
+                            0,
+                            "%s: Invalid %s size",
+                            "GXInitTexCacheRegion",
+                            "tmem even");
             break;
     }
     t->image1 = 0;
@@ -843,7 +854,11 @@ GXInitTexCacheRegion (GXTexRegion*   region,
             WidthExp2 = 0;
             break;
         default:
-            ASSERTMSGLINEV (0x4F6, 0, "%s: Invalid %s size", "GXInitTexCacheRegion", "tmem odd");
+            ASSERTMSGLINEV (0x4F6,
+                            0,
+                            "%s: Invalid %s size",
+                            "GXInitTexCacheRegion",
+                            "tmem odd");
             break;
     }
     t->image2 = 0;
@@ -1299,7 +1314,10 @@ void
 GXSetTexCoordScaleManually (GXTexCoordID coord, u8 enable, u16 ss, u16 ts)
 {
     CHECK_GXBEGIN (0x6D1, "GXSetTexCoordScaleManually");
-    ASSERTMSGLINEV (0x6D3, coord < 8, "%s: bad texcoord specified", "GXSetTexCoordScaleManually");
+    ASSERTMSGLINEV (0x6D3,
+                    coord < 8,
+                    "%s: bad texcoord specified",
+                    "GXSetTexCoordScaleManually");
     __GXData->tcsManEnab = (__GXData->tcsManEnab & ~(1 << coord)) | (enable << coord);
     if (enable != 0)
     {

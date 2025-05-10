@@ -11,6 +11,7 @@ extern "C"
 
 DECL_SECT (".ctors") extern void (*_ctors[])(); // size: 0x0, address: 0x0
 DECL_SECT (".dtors") extern void (*_dtors[])(); // size: 0x0, address: 0x0
+
 DECL_SECT (".init")
 
 asm void
@@ -28,7 +29,6 @@ __init_hardware (void)
     blr;
 #endif
 }
-
 DECL_SECT (".init")
 
 asm void
@@ -69,10 +69,7 @@ __init_cpp (void)
     /*
      *	call static initializers
      */
-    for (constructor = _ctors; *constructor; constructor++)
-    {
-        (*constructor)();
-    }
+    for (constructor = _ctors; *constructor; constructor++) { (*constructor)(); }
 #endif
 }
 
@@ -85,10 +82,7 @@ __fini_cpp (void)
     /*
      *	call destructors
      */
-    for (destructor = _dtors; *destructor; destructor++)
-    {
-        (*destructor)();
-    }
+    for (destructor = _dtors; *destructor; destructor++) { (*destructor)(); }
 #endif
 }
 

@@ -94,8 +94,8 @@ ClampStick (s8* px, s8* py, s8 max, s8 xy, s8 min)
         }
     }
 
-    *px = signX * x;
-    *py = signY * y;
+    *px = (s8)(signX * x);
+    *py = (s8)(signY * y);
 }
 
 inline static void

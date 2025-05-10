@@ -1,5 +1,3 @@
-#include <macros.h>
-
 #include <dolphin/base/PPCArch.h>
 #include <dolphin/gx.h>
 #include <dolphin/os.h>
@@ -135,8 +133,12 @@ GXInitFifoPtrs (GXFifoObj* fifo, void* readPtr, void* writePtr)
 
     ASSERTMSGLINE (0x231, realFifo != CPUFifo, "GXInitFifoPtrs: fifo is attached to CPU");
     ASSERTMSGLINE (0x233, realFifo != GPFifo, "GXInitFifoPtrs: fifo is attached to GP");
-    ASSERTMSGLINE (0x235, ((u32)readPtr & 0x1F) == 0, "GXInitFifoPtrs: readPtr not 32B aligned");
-    ASSERTMSGLINE (0x237, ((u32)writePtr & 0x1F) == 0, "GXInitFifoPtrs: writePtr not 32B aligned");
+    ASSERTMSGLINE (0x235,
+                   ((u32)readPtr & 0x1F) == 0,
+                   "GXInitFifoPtrs: readPtr not 32B aligned");
+    ASSERTMSGLINE (0x237,
+                   ((u32)writePtr & 0x1F) == 0,
+                   "GXInitFifoPtrs: writePtr not 32B aligned");
     ASSERTMSGLINE (0x23A,
                    realFifo->base <= readPtr && readPtr < realFifo->top,
                    "GXInitFifoPtrs: readPtr not in fifo range");
@@ -181,13 +183,13 @@ GXInitFifoLimits (GXFifoObj* fifo, u32 hiWatermark, u32 loWatermark)
 // HACK: Please match this function, so I can get rid of this mess!
 static s8 str_reg_field_out_of_range[] = "GX Internal: Register field out of range";
 #undef SET_REG_FIELD
-#define SET_REG_FIELD(line, reg, size, shift, val)                                                 \
-    do {                                                                                           \
-        ASSERTMSGLINE (line,                                                                       \
-                       ((u32)(val) & ~((1 << (size)) - 1)) == 0,                                   \
-                       str_reg_field_out_of_range);                                                \
-        (reg) = ((u32)(reg) & ~(((1 << (size)) - 1) << (shift))) | ((u32)(val) << (shift));        \
-    }                                                                                              \
+#define SET_REG_FIELD(line, reg, size, shift, val)                                             \
+    do {                                                                                       \
+        ASSERTMSGLINE (line,                                                                   \
+                       ((u32)(val) & ~((1 << (size)) - 1)) == 0,                               \
+                       str_reg_field_out_of_range);                                            \
+        (reg) = ((u32)(reg) & ~(((1 << (size)) - 1) << (shift))) | ((u32)(val) << (shift));    \
+    }                                                                                          \
     while (0)
 
 asm void
@@ -295,20 +297,20 @@ GXSaveCPUFifo (GXFifoObj* fifo)
     __GXSaveCPUFifoAux (realFifo);
 }
 
-#define SOME_MACRO1(fifo)                                                                          \
-    do {                                                                                           \
-        u32 temp = GX_GET_CP_REG (29) << 16;                                                       \
-        temp |= GX_GET_CP_REG (28);                                                                \
-        fifo->rdPtr = OSPhysicalToCached (temp);                                                   \
-    }                                                                                              \
+#define SOME_MACRO1(fifo)                                                                      \
+    do {                                                                                       \
+        u32 temp = GX_GET_CP_REG (29) << 16;                                                   \
+        temp |= GX_GET_CP_REG (28);                                                            \
+        fifo->rdPtr = OSPhysicalToCached (temp);                                               \
+    }                                                                                          \
     while (0)
 
-#define SOME_MACRO2(fifo)                                                                          \
-    do {                                                                                           \
-        u32 temp = GX_GET_CP_REG (25) << 16;                                                       \
-        temp |= GX_GET_CP_REG (24);                                                                \
-        fifo->count = temp;                                                                        \
-    }                                                                                              \
+#define SOME_MACRO2(fifo)                                                                      \
+    do {                                                                                       \
+        u32 temp = GX_GET_CP_REG (25) << 16;                                                   \
+        temp |= GX_GET_CP_REG (24);                                                            \
+        fifo->count = temp;                                                                    \
+    }                                                                                          \
     while (0)
 
 void
@@ -354,7 +356,11 @@ GXSaveGPFifo (GXFifoObj* fifo)
 }
 
 void
-GXGetGPStatus (GXBool* overhi, GXBool* underlow, GXBool* readIdle, GXBool* cmdIdle, GXBool* brkpt)
+GXGetGPStatus (GXBool* overhi,
+               GXBool* underlow,
+               GXBool* readIdle,
+               GXBool* cmdIdle,
+               GXBool* brkpt)
 {
     __GXData->cpStatus = GX_GET_CP_REG (0);
     *overhi = GET_REG_FIELD (__GXData->cpStatus, 1, 0);
@@ -624,11 +630,13 @@ GXResetOverflowCount (void)
     return oldcount;
 }
 
-#define SET_REG_FIELD2(line, reg, mask, val)                                                       \
-    do {                                                                                           \
-        ASSERTMSGLINE (line, ((val) & ~(mask)) == 0, "GX Internal: Register field out of range");  \
-        (reg) = ((u32)(reg) & ~(mask)) | ((u32)(val));                                             \
-    }                                                                                              \
+#define SET_REG_FIELD2(line, reg, mask, val)                                                   \
+    do {                                                                                       \
+        ASSERTMSGLINE (line,                                                                   \
+                       ((val) & ~(mask)) == 0,                                                 \
+                       "GX Internal: Register field out of range");                            \
+        (reg) = ((u32)(reg) & ~(mask)) | ((u32)(val));                                         \
+    }                                                                                          \
     while (0)
 
 #if DEBUG // currently doesn't match
@@ -661,9 +669,7 @@ GXRedirectWriteGatherPipe (void* ptr)
 #endif
 
     GXFlush();
-    while (PPCMfwpar() & 1)
-    {
-    }
+    while (PPCMfwpar() & 1) {}
     PPCMtwpar ((u32)OSUncachedToPhysical ((void*)GXFIFO_ADDR));
     if (CPGPLinked)
     {
@@ -706,14 +712,9 @@ GXRestoreWriteGatherPipe (void)
     IsWGPipeRedirected = FALSE;
 #endif
     enabled = OSDisableInterrupts();
-    for (i = 0; i < 31; i++)
-    {
-        GXWGFifo.u8 = 0;
-    }
+    for (i = 0; i < 31; i++) { GXWGFifo.u8 = 0; }
     PPCSync();
-    while (PPCMfwpar() & 1)
-    {
-    }
+    while (PPCMfwpar() & 1) {}
     PPCMtwpar ((u32)OSUncachedToPhysical ((void*)GXFIFO_ADDR));
     GX_SET_PI_REG (3, (u32)CPUFifo->base & 0x3FFFFFFF);
     GX_SET_PI_REG (4, (u32)CPUFifo->top & 0x3FFFFFFF);

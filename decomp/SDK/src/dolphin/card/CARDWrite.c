@@ -1,25 +1,23 @@
 #include <dolphin/card.h>
 
-#include <dolphin.h>
-
 // internal includes
 #include "CARDPrivate.h"
 
 #define OFFSET(addr, align) (((u32)(addr) & ((align) - 1)))
 
 // functions
-static void WriteCallback (s32 chan, long result);
-static void EraseCallback (s32 chan, long result);
+static void WriteCallback (s32 chan, s32 result);
+static void EraseCallback (s32 chan, s32 result);
 
 static void
-WriteCallback (s32 chan, long result)
+WriteCallback (s32 chan, s32 result)
 {
-    struct CARDControl*  card;
-    void                 (*callback) (s32, long);
-    u16*                 fat;
-    struct CARDDir*      dir;
-    struct CARDDir*      ent;
-    struct CARDFileInfo* fileInfo;
+    CARDControl*  card;
+    void          (*callback) (s32, long);
+    u16*          fat;
+    CARDDir*      dir;
+    CARDDir*      ent;
+    CARDFileInfo* fileInfo;
 
     card = &__CARDBlock[chan];
     if (result >= 0)
@@ -35,7 +33,7 @@ WriteCallback (s32 chan, long result)
         {
             dir = __CARDGetDirBlock (card);
             ent = dir + fileInfo->fileNo;
-            ent->time = OSGetTime() / (__OSBusClock / 4);
+            ent->time = (u32)(OSGetTime() / (__OSBusClock / 4));
             callback = card->apiCallback;
             card->apiCallback = NULL;
             result = __CARDUpdateDir (chan, callback);
@@ -51,7 +49,9 @@ WriteCallback (s32 chan, long result)
                 result = CARD_RESULT_BROKEN;
                 goto after;
             }
-            result = __CARDEraseSector (chan, card->sectorSize * fileInfo->iBlock, EraseCallback);
+            result = (s32)__CARDEraseSector (chan,
+                                             (u32)(card->sectorSize * fileInfo->iBlock),
+                                             EraseCallback);
         check:;
             if (result < 0)
             {
@@ -71,11 +71,11 @@ WriteCallback (s32 chan, long result)
 }
 
 static void
-EraseCallback (s32 chan, long result)
+EraseCallback (s32 chan, s32 result)
 {
-    struct CARDControl*  card;
-    void                 (*callback) (s32, long);
-    struct CARDFileInfo* fileInfo;
+    CARDControl*  card;
+    void          (*callback) (s32, long);
+    CARDFileInfo* fileInfo;
 
     card = &__CARDBlock[chan];
     if (result >= 0)
@@ -83,7 +83,7 @@ EraseCallback (s32 chan, long result)
         fileInfo = card->fileInfo;
         ASSERTLINE (0x98, OFFSET (fileInfo->offset, card->sectorSize) == 0);
         result = __CARDWrite (chan,
-                              card->sectorSize * fileInfo->iBlock,
+                              (u32)(card->sectorSize * fileInfo->iBlock),
                               card->sectorSize,
                               card->buffer,
                               WriteCallback);
@@ -104,16 +104,16 @@ EraseCallback (s32 chan, long result)
 }
 
 s32
-CARDWriteAsync (struct CARDFileInfo* fileInfo,
-                void*                buf,
-                s32                  length,
-                long                 offset,
-                void                 (*callback) (long, long))
+CARDWriteAsync (CARDFileInfo* fileInfo,
+                void*         buf,
+                s32           length,
+                long          offset,
+                void          (*callback) (long, long))
 {
-    struct CARDControl* card;
-    s32                 result;
-    struct CARDDir*     dir;
-    struct CARDDir*     ent;
+    CARDControl* card;
+    s32          result;
+    CARDDir*     dir;
+    CARDDir*     ent;
 
     ASSERTLINE (0xC9, buf && ((u32)buf % 32) == 0);
     ASSERTLINE (0xCA, 0 < length);
@@ -141,12 +141,14 @@ CARDWriteAsync (struct CARDFileInfo* fileInfo,
     DCStoreRange ((void*)buf, (u32)length);
     card->apiCallback = callback ? callback : __CARDDefaultApiCallback;
     card->buffer = (void*)buf;
-    result =
-        __CARDEraseSector (fileInfo->chan, card->sectorSize * (u32)fileInfo->iBlock, EraseCallback);
+    result = __CARDEraseSector (fileInfo->chan,
+                                card->sectorSize * (u32)fileInfo->iBlock,
+                                EraseCallback);
     if (result < 0)
     {
         __CARDPutControlBlock (card, result);
     }
+
     return result;
 }
 
@@ -159,5 +161,6 @@ CARDWrite (struct CARDFileInfo* fileInfo, void* buf, s32 length, long offset)
     {
         return result;
     }
+
     return __CARDSync (fileInfo->chan);
 }

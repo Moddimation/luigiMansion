@@ -1,5 +1,3 @@
-#include "dolphin/os/OSAlloc.h"
-
 #include <dolphin/os.h>
 
 #define ALIGNMENT 32
@@ -632,8 +630,6 @@ OSAddToHeap (int heap, void* start, void* end)
         OSReport ("OSCheckHeap: Failed " #cond " in %d", line);                                \
         return -1;                                                                             \
     }
-
-#define OFFSET(x, y) 0
 
 s32
 OSCheckHeap (int heap)

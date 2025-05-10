@@ -74,12 +74,12 @@ typedef struct CARDStat
 #define CARDGetIconAnim(stat)      (((stat)->bannerFormat) & CARD_STAT_ANIM_MASK)
 #define CARDGetIconFormat(stat, n) (((stat)->iconFormat >> (2 * (n))) & CARD_STAT_ICON_MASK)
 #define CARDGetIconSpeed(stat, n)  (((stat)->iconSpeed >> (2 * (n))) & CARD_STAT_SPEED_MASK)
-#define CARDSetIconFormat(stat, n, f)                                                              \
-    ((stat)->iconFormat =                                                                          \
-         (u16)(((stat)->iconFormat & ~(CARD_STAT_ICON_MASK << (2 * (n)))) | ((f) << (2 * (n)))))
-#define CARDSetIconSpeed(stat, n, f)                                                               \
-    ((stat)->iconSpeed =                                                                           \
-         (u16)(((stat)->iconSpeed & ~(CARD_STAT_SPEED_MASK << (2 * (n)))) | ((f) << (2 * (n)))))
+#define CARDSetIconFormat(stat, n, f)                                                          \
+    ((stat)->iconFormat = (u16)(((stat)->iconFormat & ~(CARD_STAT_ICON_MASK << (2 * (n)))) |   \
+                                ((f) << (2 * (n)))))
+#define CARDSetIconSpeed(stat, n, f)                                                           \
+    ((stat)->iconSpeed = (u16)(((stat)->iconSpeed & ~(CARD_STAT_SPEED_MASK << (2 * (n)))) |    \
+                               ((f) << (2 * (n)))))
 
 #define CARD_STAT_ICON_NONE     0
 #define CARD_STAT_ICON_C8       1
@@ -115,6 +115,8 @@ void CARDInit (void);
 
 s32  CARDCheck (s32 chan);
 s32  CARDCheckAsync (s32 chan, CARDCallback callback);
+s32  CARDCheckEx (s32 chan, s32* xferBytes);
+s32  CARDCheckExAsync (s32 chan, s32* xferBytes, CARDCallback callback);
 s32  CARDCreate (s32 chan, char* fileName, u32 size, CARDFileInfo* fileInfo);
 s32  CARDCreateAsync (s32           chan,
                       char*         fileName,

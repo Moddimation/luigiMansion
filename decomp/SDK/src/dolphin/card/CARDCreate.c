@@ -1,6 +1,6 @@
 #include <dolphin/card.h>
 
-#include <dolphin.h>
+#include <string.h>
 
 #include "CARDPrivate.h"
 
@@ -29,14 +29,14 @@ CreateCallbackFat (s32 chan, long result)
         ASSERTLINE (0x66, CARDIsValidBlockNo (card, card->startBlock));
         ent->startBlock = (u16)card->startBlock;
         ent->bannerFormat = 0;
-        ent->iconAddr = -1;
+        ent->iconAddr = (u32)-1;
         ent->iconFormat = 0;
         ent->iconSpeed = 0;
-        ent->commentAddr = -1;
+        ent->commentAddr = (u32)-1;
         CARDSetIconSpeed (ent, 0, CARD_STAT_SPEED_FAST);
         card->fileInfo->offset = 0;
         card->fileInfo->iBlock = ent->startBlock;
-        ent->time = OSTicksToSeconds (OSGetTime());
+        ent->time = (u32)OSTicksToSeconds (OSGetTime());
         result = __CARDUpdateDir (chan, callback);
         if (result < 0)
         {
@@ -55,7 +55,11 @@ CreateCallbackFat (s32 chan, long result)
 }
 
 s32
-CARDCreateAsync (s32 chan, char* fileName, u32 size, CARDFileInfo* fileInfo, CARDCallback callback)
+CARDCreateAsync (s32           chan,
+                 char*         fileName,
+                 u32           size,
+                 CARDFileInfo* fileInfo,
+                 CARDCallback  callback)
 {
     CARDControl* card;
     CARDDir*     dir;

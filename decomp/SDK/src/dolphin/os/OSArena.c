@@ -15,6 +15,7 @@ OSGetArenaHi ()
     ASSERTMSGLINE (0x39,
                    (u32)__OSArenaLo <= (u32)__OSArenaHi,
                    "OSGetArenaHi(): invalid arena (hi < lo).");
+
     return __OSArenaHi;
 }
 
@@ -53,6 +54,7 @@ OSAllocFromArenaLo (u32 size, u32 align)
     arenaLo += size;
     arenaLo = (u8*)ROUND (arenaLo, align);
     OSSetArenaLo (arenaLo);
+
     return ptr;
 }
 
@@ -67,5 +69,6 @@ OSAllocFromArenaHi (u32 size, u32 align)
     arenaHi -= size;
     arenaHi = ptr = (void*)TRUNC (arenaHi, align);
     OSSetArenaHi (arenaHi);
+
     return ptr;
 }

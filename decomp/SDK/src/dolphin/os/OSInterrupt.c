@@ -612,6 +612,7 @@ static ASM void
 ExternalInterruptHandler (register __OSException exception, register OSContext* context)
 {
 #pragma unused(exception)
+
 #ifdef __MWERKS__
     nofralloc;
     OS_EXCEPTION_SAVE_GPRS (context);

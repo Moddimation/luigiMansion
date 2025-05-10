@@ -59,7 +59,7 @@ typedef struct CARDControl
     u8            cmd[9];           ///< 0x94
     u8            _pad9D[3];        ///< 0x9D
     s32           cmdlen;           ///< 0xA0
-    volatile u32  mode;             ///< 0xA4
+    vs32          mode;             ///< 0xA4
     int           retry;            ///< 0xA8
     int           repeat;           ///< 0xAC
     u32           addr;             ///< 0xB0
@@ -148,7 +148,7 @@ typedef struct CARDDirCheck
 
 #define CARD_VENDOR_SAMSUNG    0xEC // high byte
 
-#define CARDIsValidBlockNo(card, iBlock)                                                           \
+#define CARDIsValidBlockNo(card, iBlock)                                                       \
     (CARD_NUM_SYSTEM_BLOCK <= (iBlock) && (iBlock) < (card)->cBlock)
 
 #define CARDGetDirCheck(dir) ((CARDDirCheck*)&(dir)[CARD_MAX_FILE])

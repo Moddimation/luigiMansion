@@ -11,11 +11,11 @@ OSInitMessageQueue (OSMessageQueue* mq, void* msgArray, s32 msgCount)
     mq->usedCount = 0;
 }
 
-int
+BOOL
 OSSendMessage (OSMessageQueue* mq, void* msg, s32 flags)
 {
-    int enabled;
-    s32 lastIndex;
+    BOOL enabled;
+    s32  lastIndex;
 
     enabled = OSDisableInterrupts();
     while (mq->msgCount <= mq->usedCount)
@@ -23,7 +23,7 @@ OSSendMessage (OSMessageQueue* mq, void* msg, s32 flags)
         if (!(flags & 1))
         {
             OSRestoreInterrupts (enabled);
-            return 0;
+            return FALSE;
         }
         OSSleepThread (&mq->queueSend);
     }
@@ -32,20 +32,21 @@ OSSendMessage (OSMessageQueue* mq, void* msg, s32 flags)
     mq->usedCount++;
     OSWakeupThread (&mq->queueReceive);
     OSRestoreInterrupts (enabled);
-    return 1;
+
+    return TRUE;
 }
 
-int
+BOOL
 OSReceiveMessage (OSMessageQueue* mq, void* msg, s32 flags)
 {
-    int enabled = OSDisableInterrupts();
+    BOOL enabled = OSDisableInterrupts();
 
     while (mq->usedCount == 0)
     {
         if (!(flags & 1))
         {
             OSRestoreInterrupts (enabled);
-            return 0;
+            return FALSE;
         }
         OSSleepThread (&mq->queueReceive);
     }
@@ -58,20 +59,21 @@ OSReceiveMessage (OSMessageQueue* mq, void* msg, s32 flags)
     mq->usedCount--;
     OSWakeupThread (&mq->queueSend);
     OSRestoreInterrupts (enabled);
-    return 1;
+
+    return TRUE;
 }
 
-int
+BOOL
 OSJamMessage (OSMessageQueue* mq, void* msg, s32 flags)
 {
-    int enabled = OSDisableInterrupts();
+    BOOL enabled = OSDisableInterrupts();
 
     while (mq->msgCount <= mq->usedCount)
     {
         if (!(flags & 1))
         {
             OSRestoreInterrupts (enabled);
-            return 0;
+            return FALSE;
         }
         OSSleepThread (&mq->queueSend);
     }
@@ -80,5 +82,6 @@ OSJamMessage (OSMessageQueue* mq, void* msg, s32 flags)
     mq->usedCount++;
     OSWakeupThread (&mq->queueReceive);
     OSRestoreInterrupts (enabled);
-    return 1;
+
+    return TRUE;
 }

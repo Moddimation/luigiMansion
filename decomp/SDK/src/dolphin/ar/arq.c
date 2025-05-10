@@ -1,6 +1,5 @@
-#include <dolphin/ar.h>
-
 #include <dolphin.h>
+#include <dolphin/ar.h>
 
 #include "ar_private.h"
 
@@ -93,6 +92,7 @@ __ARQServiceQueueLo (void)
 void
 __ARQCallbackHack (u32 unused)
 {
+#pragma unused(unused)
 }
 
 void

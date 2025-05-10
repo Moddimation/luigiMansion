@@ -121,13 +121,11 @@ const void* __OSStringTable      AT_ADDRESS (OS_BASE_CACHED | 0x30D0);
 
 void
 OSNotifyLink ()
-{
-}
+{}
 
 void
 OSNotifyUnlink ()
-{
-}
+{}
 
 #pragma dont_inline reset
 

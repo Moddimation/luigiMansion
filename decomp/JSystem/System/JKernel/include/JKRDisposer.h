@@ -17,7 +17,7 @@ private:
     JSULink<JKRDisposer> mHeapLink; ///< 0x04 // Link to disposer, for heap (?)
 };
 
-;
+//
 SASSERT_SIZE (JKRDisposer, 0x18);
 
 #endif

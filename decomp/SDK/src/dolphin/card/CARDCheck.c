@@ -1,6 +1,6 @@
 #include <dolphin/card.h>
 
-#include <dolphin.h>
+#include <string.h>
 
 #include "../os/OSPrivate.h"
 #include "CARDPrivate.h"

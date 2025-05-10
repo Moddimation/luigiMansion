@@ -96,16 +96,6 @@ protected:
     virtual void     __unknown (void) = 0;
 
     void
-    append (JKRHeap* parent)
-    {
-    }
-
-    void
-    remove (JKRHeap* parent)
-    {
-    }
-
-    void
     unlock ()
     {
         OSLockMutex (&mMutex);

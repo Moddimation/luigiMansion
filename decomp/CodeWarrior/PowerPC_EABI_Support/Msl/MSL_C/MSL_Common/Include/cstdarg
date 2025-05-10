@@ -1,8 +1,8 @@
 /*  Metrowerks Standard Library  */
 
-/*  $Date: 1999/08/06 14:01:09 $ 
- *  $Revision: 1.8.4.4 $ 
- *  $NoKeywords: $ 
+/*  $Date: 1999/08/06 14:01:09 $
+ *  $Revision: 1.8.4.4 $
+ *  $NoKeywords: $
  *
  *		Copyright 1995-1999 Metrowerks, Inc.
  *		All rights reserved.
@@ -11,180 +11,171 @@
 /*
  *	cstdarg         hh  971206  filename used to be stdarg.h
  */
- 
+
 #ifndef __cstdarg__
 #define __cstdarg__
 
+#include <__bt.h>
 #include <ansi_parms.h>
 #include <va_list.h>
-#include <__bt.h>
 
-#ifndef RC_INVOKED   /* hh 971230 */
+#ifndef RC_INVOKED /* hh 971230 */
 
-#pragma options align=native
+#pragma options align = native
 #if defined(__CFM68K__) && !defined(__USING_STATIC_LIBS__)
-	#pragma import on
+#pragma import on
 #endif
 
-#ifdef __cplusplus      /* hh  971206 */
-	extern "C" {        /* mf  981123 -- removed std -- wrapped w/ extern "C" */
+#ifdef __cplusplus /* hh  971206 */
+extern "C"
+{                  /* mf  981123 -- removed std -- wrapped w/ extern "C" */
 #endif
 
-#ifdef __m56800__									                	/* mm 981029 */	
-					                                                
-  #define __va_start(parm) (__std(va_list))(&parm)					    /* mm 981014 */
-  #define va_start(ap, parm) (void)(ap = (unsigned short *)&parm)		/* mm 981014 */
-  #define va_arg(ap, type) (* (type *)((ap) -= sizeof(type)))			/* mm 981014 */
-  #define va_end(ap) (void)0											/* mm 981014 */
+#ifdef __m56800__  /* mm 981029 */
 
-#elif __PPC_EABI__
+#define __va_start(parm)   (__std (va_list)) (&parm)           /* mm 981014 */
+#define va_start(ap, parm) (void)(ap = (unsigned short*)&parm) /* mm 981014 */
+#define va_arg(ap, type)   (*(type*)((ap) -= sizeof (type)))   /* mm 981014 */
+#define va_end(ap)         (void)0                             /* mm 981014 */
 
-  extern void* __va_arg(void*, int);
+#elif defined(__PPC_EABI__)
 
-  #define __va_start(ap,fmt) ((void)fmt,__builtin_va_info(&ap))
-  #define __va_arg(ap,t)	(*((t*)__va_arg(ap,_var_arg_typeof(t))))
+extern void* __va_arg (void*, int);
 
-  #define va_start __va_start
-  #define va_arg   __va_arg
-  #define va_end   __va_end
+#define __va_start(ap, fmt) ((void)fmt, __builtin_va_info (&ap))
+#define __va_arg(ap, t)     (*((t*)__va_arg (ap, _var_arg_typeof (t))))
 
-  #define __va_end(ap) ((void)0)
+#define va_start            __va_start
+#define va_arg              __va_arg
+#define va_end              __va_end
 
-  /* macro for copying one va_list to another */
-  #define	__va_copy(a,b)	((a)[0] = (b)[0])
+#define __va_end(ap)        ((void)0)
+
+/* macro for copying one va_list to another */
+#define __va_copy(a, b)     ((a)[0] = (b)[0])
 
 #elif __MIPS__
 
-	#if __n64abi__
-		#define __passed_in_float_register__(type)	\
-			((__builtin_ntype(type) & __BT_FLOAT) != 0)
-		#define __scalar_type(type)	\
-			((__builtin_ntype(type) & (__BT_INT|__BT_POINTER|__BT_ENUM)) != 0)
+#if __n64abi__
+#define __passed_in_float_register__(type) ((__builtin_ntype (type) & __BT_FLOAT) != 0)
+#define __scalar_type(type)                                                                    \
+    ((__builtin_ntype (type) & (__BT_INT | __BT_POINTER | __BT_ENUM)) != 0)
 
-		
-		#define __endian_padding(type)	(__option(little_endian) ? 8 : sizeof(type))
-		#define va_start(ap,x)	((void)x, __builtin_initialize(&ap))
+#define __endian_padding(type) (__option (little_endian) ? 8 : sizeof (type))
+#define va_start(ap, x)        ((void)x, __builtin_initialize (&ap))
 
-		#define va_arg(ap, type)																		\
-			(__passed_in_float_register__(type) 														\
-			?	/* FLOAT	*/																			\
-				(*(type *)																				\
-					((ap).fpr < 8	/*	passed in registers or memory?	*/								\
-					?	((ap).fpr++, ((ap).fpreg_ptr += 8) - 8)											\
-					:	(((ap).mem_ptr += 8) - 8)														\
-					)																					\
-				)																						\
-			:	/* Other types passed in CPU registers	*/												\
-				(__scalar_type(type)															\
-					?	/* Integer type	*/																\
-						(*(type *)																		\
-							((ap).gpr < 8	/*	passed in registers or memory?	*/						\
-							?	((ap).gpr++, ((ap).gpreg_ptr += 8) - __endian_padding(type))			\
-							:	(((ap).mem_ptr += 8) - __endian_padding(type))							\
-							)																			\
-						)																				\
-					:	/* Struct	*/																	\
-						(sizeof(type) <= 8 																\
-							?	/*	The struct was passed by copy	*/									\
-								(*(type *)																\
-									((ap).gpr < 8	/*	passed in registers or memory?	*/				\
-									?	((ap).gpr++, ((ap).gpreg_ptr += 8) - 8)							\
-									:	(((ap).mem_ptr += 8) - 8)										\
-									)																	\
-								)																		\
-							:	/*	The struct was passed by reference	*/								\
-								(**(type **)															\
-									((ap).gpr < 8	/*	passed in registers or memory?	*/				\
-									?	((ap).gpr++, ((ap).gpreg_ptr += 8) - __endian_padding(void *))	\
-									:	(((ap).mem_ptr += 8) - __endian_padding(void *))				\
-									)																	\
-								)																		\
-						)																				\
-				)																						\
-			)
-							
-		#define va_end(ap)
-		
-	#else
+#define va_arg(ap, type)                                                                       \
+    (__passed_in_float_register__ (type) ?                     /* FLOAT	*/                     \
+         (*(type*)((ap).fpr < 8             /*	passed in registers or memory?	*/               \
+                       ? ((ap).fpr++, ((ap).fpreg_ptr += 8) - 8)                               \
+                       : (((ap).mem_ptr += 8) - 8)))                                           \
+                                         :  /* Other types passed in CPU registers	*/          \
+         (__scalar_type (type) ?            /* Integer type	*/                                 \
+              (*(type*)((ap).gpr < 8        /*	passed in registers or memory?	*/               \
+                            ? ((ap).gpr++, ((ap).gpreg_ptr += 8) - __endian_padding (type))    \
+                            : (((ap).mem_ptr += 8) - __endian_padding (type))))                \
+                               :            /* Struct	*/                                       \
+              (sizeof (type) <= 8 ?         /*	The struct was passed by copy	*/                \
+                   (*(type*)((ap).gpr < 8   /*	passed in registers or memory?	*/               \
+                                 ? ((ap).gpr++, ((ap).gpreg_ptr += 8) - 8)                     \
+                                 : (((ap).mem_ptr += 8) - 8)))                                 \
+                                  :         /*	The struct was passed by reference	*/           \
+                   (**(type**)((ap).gpr < 8 /*	passed in registers or memory?	*/               \
+                                   ? ((ap).gpr++,                                              \
+                                      ((ap).gpreg_ptr += 8) - __endian_padding (void*))        \
+                                   : (((ap).mem_ptr += 8) - __endian_padding (void*)))))))
 
-		#if (__dest_os == __wince_os)
-			#include <stdlib.h>
-		#else
-			#define __max(a,b)  (((a) > (b)) ? (a) : (b))
-		#endif
-		  
-		#include <__config.h>
-	  
-		// Realign the address.
-		#define __alignaddress(a)		(((address)(a)+sizeof(_REG_TYPE)-1) & ~(sizeof(_REG_TYPE)-1))
-		#define __align(x,a)		 	((x+a-1) & ~(a-1))
-		#define __addressofnext(a,type)	(__align( (long)a + __max(sizeof(type),sizeof(_REG_TYPE)), \
-													 __builtin_align(type))	)
-		#define __endian_padding(type)	\
-			(__option(little_endian) ? (sizeof(type)==4 && sizeof(_REG_TYPE)==8 ? -2 : -1) : -1)
-		/*
-		 *	va_start makes ap point past the parameter parm
-		 */
-		#define va_start(ap, parm)	(ap=(__std(va_list))(__alignaddress(((address)&parm) + sizeof(parm))))
-		#define va_arg(ap, type)	((type *)(ap=(__std(va_list))(__addressofnext(ap,type))))[__endian_padding(type)]
-		#define va_end(ap)
+#define va_end(ap)
 
-	#endif
-	  
-#else	
-/*  not PPC_EABI, not MIPS, not m56800  */						/* mm 981014 */
-
-  #define va_start(ap, parm)	ap = __va_start(parm)
-  #define va_end(ap)
-  #define va_copy(dest, src)  dest = src             /* mm 980824 */
-
-# if __INTEL__
-
-   #define __va_start(parm)	(__std(va_list)) ((long)(&parm) + \
-							((((long)(&parm + 1) - (long)(&parm))+3)/4*4))  /* mm 9708027 */
-   #define _Align(type, mask) (sizeof(type) + (mask) & ~(mask))
-   #define va_arg(ap, type)	(* (type *) (((ap) += _Align(type, 3)) - _Align(type, 3)))
-
-# elif	__POWERPC__ && (__dest_os	==	__mac_os)  /*for PowerMac 32bit calling conventions only*/
-   #define __va_start(parm)	(__std(va_list)) (&parm + 1)  /* mm 9708027 */
-#if __VEC__
-	#define va_arg(ap, type)  (*       (((type *) (ap =  (char *) (( ((unsigned long)ap+__builtin_align(type)-1) & ~(__builtin_align(type)-1) ) + sizeof(type))       ))  -1))
 #else
-   #define va_arg(ap, type)  (*       (((type *) (ap += (((sizeof(type)+3)/4)*4) )) -1)        )
+
+#if (__dest_os == __wince_os)
+#include <stdlib.h>
+#else
+#define __max(a, b) (((a) > (b)) ? (a) : (b))
 #endif
 
-#elif __MC68K__ && __CFM68K__ /*for CFM68K calling conventions only*/								/* mm 990414 */
-#define __va_start(parm) (__std(va_list)) (&parm + 1)												/* mm 990414 */
-#define va_arg(ap, type) (*(type *)((ap += sizeof(type) + 3U & ~3U) - (sizeof(type) + 3U & ~3U)))	/* mm 990414 */
+#include <__config.h>
 
-# else
-  /*  not POWERPC, nor INTEL */
+// Realign the address.
+#define __alignaddress(a) (((address)(a) + sizeof (_REG_TYPE) - 1) & ~(sizeof (_REG_TYPE) - 1))
+#define __align(x, a)     ((x + a - 1) & ~(a - 1))
+#define __addressofnext(a, type)                                                               \
+    (__align ((long)a + __max (sizeof (type), sizeof (_REG_TYPE)), __builtin_align (type)))
+#define __endian_padding(type)                                                                 \
+    (__option (little_endian) ? (sizeof (type) == 4 && sizeof (_REG_TYPE) == 8 ? -2 : -1) : -1)
+/*
+ *	va_start makes ap point past the parameter parm
+ */
+#define va_start(ap, parm)                                                                     \
+    (ap = (__std (va_list)) (__alignaddress (((address) & parm) + sizeof (parm))))
+#define va_arg(ap, type)                                                                       \
+    ((type*)(ap = (__std (va_list)) (__addressofnext (ap, type))))[__endian_padding (type)]
+#define va_end(ap)
 
-   #define __va_start(parm)	(__std(va_list)) ((char *)&parm + (sizeof (parm) + (1U) & ~(1U)))  /* mm 9708027 */
-    #define va_arg(ap, type)	(*       (((type *) (ap += sizeof(type))) - 1)        )
+#endif
 
-# endif
+#else
+/*  not PPC_EABI, not MIPS, not m56800  */ /* mm 981014 */
 
-#endif /* __m56800__ */				 /* mm 981029 */
+#define va_start(ap, parm) ap = __va_start (parm)
+#define va_end(ap)
+#define va_copy(dest, src) dest = src       /* mm 980824 */
 
-#ifdef __cplusplus         /* hh  971206 */
-		}
+#if __INTEL__
+
+#define __va_start(parm)                                                                       \
+    (__std (va_list)) ((long)(&parm) +                                                         \
+                       ((((long)(&parm + 1) - (long)(&parm)) + 3) / 4 * 4)) /* mm 9708027 */
+#define _Align(type, mask) (sizeof (type) + (mask) & ~(mask))
+#define va_arg(ap, type)   (*(type*)(((ap) += _Align (type, 3)) - _Align (type, 3)))
+
+#elif __POWERPC__ && (__dest_os == __mac_os) /*for PowerMac 32bit calling conventions only*/
+#define __va_start(parm) (__std (va_list)) (&parm + 1)                        /* mm 9708027 */
+#if __VEC__
+#define va_arg(ap, type)                                                                       \
+    (*(((type*)(ap = (char*)((((unsigned long)ap + __builtin_align (type) - 1) &               \
+                              ~(__builtin_align (type) - 1)) +                                 \
+                             sizeof (type)))) -                                                \
+       1))
+#else
+#define va_arg(ap, type) (*(((type*)(ap += (((sizeof (type) + 3) / 4) * 4))) - 1))
+#endif
+
+#elif __MC68K__ && __CFM68K__ /*for CFM68K calling conventions only*/         /* mm 990414 */
+#define __va_start(parm) (__std (va_list)) (&parm + 1)                        /* mm 990414 */
+#define va_arg(ap, type)                                                                       \
+    (*(type*)((ap += sizeof (type) + 3U & ~3U) - (sizeof (type) + 3U & ~3U))) /* mm 990414 */
+
+#else
+/*  not POWERPC, nor INTEL */
+
+#define __va_start(parm)                                                                       \
+    (__std (va_list)) ((char*)&parm + (sizeof (parm) + (1U) & ~(1U)))         /* mm 9708027 */
+#define va_arg(ap, type) (*(((type*)(ap += sizeof (type))) - 1))
+
+#endif
+
+#endif /* __m56800__ */                                                       /* mm 981029 */
+
+#ifdef __cplusplus                                                            /* hh  971206 */
+}
 #endif
 
 #if defined(__CFM68K__) && !defined(__USING_STATIC_LIBS__)
-	#pragma import reset
+#pragma import reset
 #endif
 
-#pragma options align=reset
+#pragma options align = reset
 
-#endif /* RC_INVOKED */
+#endif                                                                        /* RC_INVOKED */
 
-#endif /* __cstdarg__ */
+#endif                                                                        /* __cstdarg__ */
 
 /*     Change record
 961015	bkoz	change to va_arg according to BR ES56366 (J. Pratt)
 061216	KO		Fixed va_start for Intel.
-970623	MEA		Merged PPC EABI version. 
+970623	MEA		Merged PPC EABI version.
 mm 9708027      Fixed va_start to allow for unsigned char arguments.  BR7931
 hh  971206      Changed filename from stdarg.h to cstdarg and added namespace support.
 hh 971230       added RC_INVOKED wrapper

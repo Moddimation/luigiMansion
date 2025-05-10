@@ -171,7 +171,7 @@ SIInit ()
     __OSUnmaskInterrupts (0x800);
 }
 
-static int
+static BOOL
 __SITransfer (s32   chan,
               void* output,
               u32   outputBytes,
@@ -179,10 +179,10 @@ __SITransfer (s32   chan,
               u32   inputBytes,
               void  (*callback) (s32, u32, OSContext*))
 {
-    int enabled;
-    u32 rLen;
-    u32 i;
-    u32 sr;
+    BOOL enabled;
+    u32  rLen;
+    u32  i;
+    u32  sr;
 
     union
     {
@@ -217,7 +217,7 @@ __SITransfer (s32   chan,
     if (Si.chan != -1)
     {
         OSRestoreInterrupts (enabled);
-        return 0;
+        return FALSE;
     }
     ASSERTLINE (0x138,
                 (__SIRegs[SI_COMCSR_IDX] & (SI_COMCSR_TSTART_MASK | SI_COMCSR_TCINT_MASK)) ==
@@ -244,7 +244,8 @@ __SITransfer (s32   chan,
 
     __SIRegs[SI_COMCSR_IDX] = comcsr.val;
     OSRestoreInterrupts (enabled);
-    return 1;
+
+    return TRUE;
 }
 
 u32
@@ -260,7 +261,9 @@ SISync ()
     enabled = OSDisableInterrupts();
     sr = CompleteTransfer();
     SITransferNext (4);
+
     OSRestoreInterrupts (enabled);
+
     return sr;
 }
 
@@ -281,6 +284,7 @@ u32
 SIGetCommand (s32 chan)
 {
     ASSERTMSGLINE (0x1A9, (chan >= 0) && (chan < 4), "SIGetCommand(): invalid channel.");
+
     return __SIRegs[chan * 3];
 }
 
@@ -306,7 +310,9 @@ SISetXY (u32 x, u32 y)
     Si.poll &= 0xFC0000FF;
     Si.poll |= poll;
     poll = Si.poll;
+
     OSRestoreInterrupts (enabled);
+
     return poll;
 }
 
@@ -334,7 +340,9 @@ SIEnablePolling (u32 poll)
     poll = Si.poll;
     __SIRegs[0x38 / 4] = 0x80000000;
     __SIRegs[0x30 / 4] = poll;
+
     OSRestoreInterrupts (enabled);
+
     return poll;
 }
 
@@ -355,7 +363,9 @@ SIDisablePolling (u32 poll)
     poll = Si.poll & ~poll;
     __SIRegs[0x30 / 4] = poll;
     Si.poll = poll;
+
     OSRestoreInterrupts (enabled);
+
     return poll;
 }
 
@@ -393,7 +403,7 @@ AlarmHandler (struct OSAlarm* alarm, OSContext* context)
     }
 }
 
-int
+BOOL
 SITransfer (s32   chan,
             void* output,
             u32   outputBytes,
@@ -402,7 +412,7 @@ SITransfer (s32   chan,
             void  (*callback) (s32, u32, OSContext*),
             s64   time)
 {
-    int              enabled;
+    BOOL             enabled;
     struct SIPacket* packet;
     s64              now;
 
@@ -412,7 +422,7 @@ SITransfer (s32   chan,
     if (packet->chan != -1)
     {
         OSRestoreInterrupts (enabled);
-        return 0;
+        return FALSE;
     }
     now = OSGetTime();
     if (time == 0)
@@ -426,7 +436,7 @@ SITransfer (s32   chan,
     else if (__SITransfer (chan, output, outputBytes, input, inputBytes, callback))
     {
         OSRestoreInterrupts (enabled);
-        return 1;
+        return TRUE;
     }
     packet->chan = chan;
     packet->output = output;
@@ -435,6 +445,8 @@ SITransfer (s32   chan,
     packet->inputBytes = inputBytes;
     packet->callback = callback;
     packet->time = time;
+
     OSRestoreInterrupts (enabled);
-    return 1;
+
+    return TRUE;
 }

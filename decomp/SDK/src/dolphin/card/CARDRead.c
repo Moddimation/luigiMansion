@@ -1,12 +1,7 @@
 #include <dolphin/card.h>
 #include <dolphin/os.h>
 
-#include <dolphin.h>
-
 #include "CARDPrivate.h"
-
-#define TRUNC(n, a)         (((u32)(n)) & ~((a) - 1))
-#define OFFSET(addr, align) (((u32)(addr) & ((align) - 1)))
 
 // functions
 static void ReadCallback (s32 chan, s32 result);
@@ -74,6 +69,7 @@ __CARDSeek (CARDFileInfo* fileInfo, s32 length, s32 offset, CARDControl** pcard)
     fileInfo->offset = offset;
 
     *pcard = card;
+
     return CARD_RESULT_READY;
 }
 
@@ -99,7 +95,8 @@ ReadCallback (s32 chan, s32 result)
         goto error;
     }
 
-    length = TRUNC (fileInfo->offset + card->sectorSize, card->sectorSize) - fileInfo->offset;
+    length =
+        (s32)TRUNC (fileInfo->offset + card->sectorSize, card->sectorSize) - fileInfo->offset;
     fileInfo->length -= length;
     if (fileInfo->length <= 0)
     {
@@ -187,6 +184,7 @@ CARDReadAsync (CARDFileInfo* fileInfo, void* buf, s32 length, s32 offset, CARDCa
     {
         __CARDPutControlBlock (card, result);
     }
+
     return result;
 }
 
@@ -199,6 +197,7 @@ CARDRead (struct CARDFileInfo* fileInfo, void* buf, s32 length, long offset)
     {
         return result;
     }
+
     return __CARDSync (fileInfo->chan);
 }
 
@@ -226,5 +225,6 @@ CARDCancel (CARDFileInfo* fileInfo)
         result = CARD_RESULT_CANCELED;
     }
     OSRestoreInterrupts (intrEnabled);
+
     return result;
 }
