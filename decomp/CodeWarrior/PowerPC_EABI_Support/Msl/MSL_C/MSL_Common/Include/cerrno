@@ -1,0 +1,124 @@
+/*  Metrowerks Standard Library  */
+
+/*  $Date: 1999/03/09 17:15:24 $ 
+ *  $Revision: 1.10 $ 
+ *  $NoKeywords: $ 
+ *
+ *		Copyright 1995-1999 Metrowerks, Inc.
+ *		All rights reserved.
+ */
+
+/*
+ *	cerrno         hh  971206 filename used to be errno.h
+ */
+ 
+#ifndef __cerrno__
+#define __cerrno__
+
+#include <ansi_parms.h>
+
+#if _MWMT && (__dest_os	== __win32_os  || __dest_os	== __wince_os)
+#include <ThreadLocalData.h>
+#endif
+
+#if __dest_os == __be_os
+				/* mm 970708 begin */
+#include <Errors.h>
+
+#ifndef RC_INVOKED   /* hh 971230 */
+
+#define ENOERR          0
+#define EOK 			ENOERR  /* some code assumes EOK exists */
+
+#ifdef __cplusplus       /* hh  971206 */
+	extern "C" {
+#endif
+
+extern int *_errnop(void);
+
+#define errno (*(_errnop()))
+
+#ifdef __cplusplus
+	}
+	
+#endif  /* __cplusplus */
+				/* mm 970708 end */
+
+#endif /* RC_INVOKED */
+
+#else  /*  not BeOS  */
+
+	#define ENOERR					 0
+	#define EDOM						33
+	#define ERANGE					34
+	#define EFPOS						35
+	#define	ESIGPARM				36
+  /*#define ENOMEM					37             mm 970416*/
+  /*#define EACCES					38             mm 970416*/
+  /*#define ENOENT					39             mm 970416*/
+  /*#define ENOSYS					40             mm 970416*/
+
+#endif
+
+#if (__dest_os	== __win32_os || __dest_os	== __wince_os)
+	/*
+	 * These are other error types defined in Visual C++.
+	 * I'm not sure if these numbers will work properly with the constants
+	 * defined above.
+	 */
+	#define EPERM				1
+	#define EACCES				2
+	#define EBADF				3
+	#define EDEADLOCK			4
+	#define EMFILE				5
+	#define ENOENT				6
+	#define ENFILE				7
+	#define ENOSPC				8
+	#define EINVAL				9
+	#define EIO				   10
+	#define ENOMEM			   11
+	#define ENOSYS			   12
+#endif
+
+#if __dest_os != __be_os          /* mm 970708 */
+
+/* 961219 KO */
+#if _MWMT && (__dest_os	== __win32_os  || __dest_os	== __wince_os)
+	#define errno (_GetThreadLocalData()->errno)	
+#else
+
+	#ifndef RC_INVOKED   /* hh 971230 */
+
+	#ifdef __cplusplus
+		
+		extern "C" {
+	#endif
+
+	__tls extern int errno;
+
+	#ifdef __cplusplus
+		}	
+	#endif
+
+	#endif /* RC_INVOKED */
+
+#endif  /*  dest_os == win32 or wince  */
+
+#endif  /* dest_os != be_os  */   /* mm 970708  */
+
+#endif /* __cerrno__ */
+
+/*     Change record
+ * 960829 bkoz	added error info for x86, powerTV
+ * 960930 mm	changed C++ comments to C comments for ANSI strict
+ * 961217 KO	Added an extern C wrapper to errno. This is needed for the new CW11 x86
+				name mangling.
+ * 961219 KO	Added a Win32 ifdef so errno is part of the thread local data structure
+         		rather than a global.
+ * 970416 mm	Removed errors that no longer apply
+ * mm 970708	Inserted Be changes
+ * hh  971206	Changed filename from errno.h to cerrno and added namespace support
+ * hh 971230	added RC_INVOKED wrapper
+ * vss 990121   Remove powerTV wrappers
+ * mf  030199   removed errno from std, and also added guard for single threaded lib.
+ */

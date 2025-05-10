@@ -46,10 +46,8 @@ Run (register u32 addr)
 static void
 ReadApploader (DVDCommandBlock* dvdCmd, void* addr, u32 offset, u32 numBytes)
 {
-    while (Prepared == FALSE)
-    {
-    }
-    DVDReadAbsAsyncForBS (dvdCmd, addr, numBytes, offset + 0x2440, NULL);
+    while (Prepared == FALSE) {}
+    DVDReadAbsAsyncForBS (dvdCmd, addr, (s32)numBytes, (s32)(offset + 0x2440), NULL);
 
     while (TRUE)
     {
@@ -71,7 +69,7 @@ ReadApploader (DVDCommandBlock* dvdCmd, void* addr, u32 offset, u32 numBytes)
             case 9:
             case 10:
             case 11:
-                __OSDoHotReset (OS_HOT_RESET_CODE);
+                __OSDoHotReset ((s32)OS_HOT_RESET_CODE);
                 continue;
         }
         break;
@@ -81,12 +79,17 @@ ReadApploader (DVDCommandBlock* dvdCmd, void* addr, u32 offset, u32 numBytes)
 static void
 Callback (s32 result, DVDCommandBlock* block)
 {
+#pragma unused(result)
+#pragma unused(block)
+
     Prepared = TRUE;
 }
 
 void
 __OSReboot (u32 resetCode, BOOL forceMenu)
 {
+#pragma unused(forceMenu)
+
     OSContext       exceptionContext;
     DVDCommandBlock dvdCmd;
     DVDCommandBlock dvdCmd2;
@@ -106,7 +109,7 @@ __OSReboot (u32 resetCode, BOOL forceMenu)
 
     if (!DVDCheckDisk())
     {
-        __OSDoHotReset (OS_HOT_RESET_CODE);
+        __OSDoHotReset ((s32)OS_HOT_RESET_CODE);
     }
 
     __OSMaskInterrupts (0xffffffe0);

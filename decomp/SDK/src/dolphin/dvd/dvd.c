@@ -1,10 +1,7 @@
-#include <dolphin/hw_regs.h>
-
-#include <dolphin.h>
+#include <string.h>
 
 #include "../os/OSPrivate.h"
 #include "dvd_private.h"
-#include "macros.h"
 
 #define ERROR_FATAL            1
 #define ERROR_RETRY            2
@@ -1061,9 +1058,9 @@ int
 DVDReadAbsAsyncPrio (DVDCommandBlock* block,
                      void*            addr,
                      s32              length,
-                     long             offset,
+                     s32              offset,
                      void             (*callback) (s32, DVDCommandBlock*),
-                     long             prio)
+                     s32              prio)
 {
     int idle;
 
@@ -1128,7 +1125,7 @@ int
 DVDReadAbsAsyncForBS (DVDCommandBlock* block,
                       void*            addr,
                       s32              length,
-                      long             offset,
+                      s32              offset,
                       void             (*callback) (s32, DVDCommandBlock*))
 {
     int idle;
@@ -1163,9 +1160,9 @@ DVDReadAbsAsyncForBS (DVDCommandBlock* block,
 }
 
 int
-DVDReadDiskID (DVDCommandBlock*  block,
-               struct DVDDiskID* diskID,
-               void              (*callback) (s32, DVDCommandBlock*))
+DVDReadDiskID (DVDCommandBlock* block,
+               DVDDiskID*       diskID,
+               void             (*callback) (s32, DVDCommandBlock*))
 {
     int idle;
 
@@ -1237,7 +1234,8 @@ DVDCancelStream (DVDCommandBlock* block)
     while (TRUE)
     {
         state = ((volatile DVDCommandBlock*)block)->state;
-        if (state == DVD_STATE_END || state == DVD_STATE_FATAL_ERROR || state == DVD_STATE_CANCELED)
+        if (state == DVD_STATE_END || state == DVD_STATE_FATAL_ERROR ||
+            state == DVD_STATE_CANCELED)
         {
             retVal = (s32)block->transferredSize;
             break;
@@ -1525,9 +1523,9 @@ DVDChangeDiskAsyncForBS (DVDCommandBlock* block, void (*callback) (s32, DVDComma
 }
 
 int
-DVDChangeDiskAsync (DVDCommandBlock*  block,
-                    struct DVDDiskID* id,
-                    void              (*callback) (s32, DVDCommandBlock*))
+DVDChangeDiskAsync (DVDCommandBlock* block,
+                    DVDDiskID*       id,
+                    void             (*callback) (s32, DVDCommandBlock*))
 {
     int idle;
 
@@ -1549,7 +1547,7 @@ DVDChangeDiskAsync (DVDCommandBlock*  block,
 }
 
 s32
-DVDChangeDisk (DVDCommandBlock* block, struct DVDDiskID* id)
+DVDChangeDisk (DVDCommandBlock* block, DVDDiskID* id)
 {
     int result;
     s32 state;
@@ -1896,7 +1894,8 @@ DVDCancel (volatile DVDCommandBlock* block)
     while (1)
     {
         state = block->state;
-        if (state == DVD_STATE_END || state == DVD_STATE_FATAL_ERROR || state == DVD_STATE_CANCELED)
+        if (state == DVD_STATE_END || state == DVD_STATE_FATAL_ERROR ||
+            state == DVD_STATE_CANCELED)
         {
             break;
         }
@@ -1931,10 +1930,7 @@ DVDCancelAllAsync (void (*callback) (s32, DVDCommandBlock*))
 
     enabled = OSDisableInterrupts();
     DVDPause();
-    while ((p = __DVDPopWaitingQueue()))
-    {
-        DVDCancelAsync (p, NULL);
-    }
+    while ((p = __DVDPopWaitingQueue())) { DVDCancelAsync (p, NULL); }
     if (executing)
     {
         retVal = DVDCancelAsync (executing, callback);

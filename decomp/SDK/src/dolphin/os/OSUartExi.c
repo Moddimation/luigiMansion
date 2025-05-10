@@ -41,7 +41,7 @@ QueueLength (void)
     EXIImm (0, &cmd, 1, 0, 0);
     EXISync (0);
     EXIDeselect (0);
-    return 0x10 - (cmd >> 0x18);
+    return (int)(0x10 - (cmd >> 0x18));
 }
 
 int

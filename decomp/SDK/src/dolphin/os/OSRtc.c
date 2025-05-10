@@ -136,6 +136,8 @@ static void
 WriteSramCallback ()
 {
     BOOL unused;
+#pragma unused(unused)
+
     ASSERTLINE (0xF0, !Scb.locked);
     Scb.sync = WriteSram (&Scb.sram[Scb.offset], Scb.offset, RTC_SRAM_SIZE - Scb.offset);
     if (Scb.sync)
@@ -165,7 +167,7 @@ WriteSram (void* buffer, u32 offset, u32 size)
     err = FALSE;
     err |= !EXIImm (0, &cmd, 4, 1, 0);
     err |= !EXISync (0);
-    err |= !EXIImmEx (0, buffer, size, 1);
+    err |= !EXIImmEx (0, buffer, (s32)size, 1);
     err |= !EXIDeselect (0);
     EXIUnlock (0);
     return !err;
@@ -272,6 +274,7 @@ __OSCheckSram ()
     u16     checkSumInv;
     OSSram* sram;
     BOOL    unused;
+#pragma unused(unused)
 
     ASSERTLINE (0x1A9, Scb.locked);
 
@@ -295,7 +298,7 @@ __OSReadROM (void* buffer, s32 length, long offset)
     u32  cmd;
 
     ASSERTLINE (0x1C8, length <= 1024);
-    DCInvalidateRange (buffer, length);
+    DCInvalidateRange (buffer, (u32)length);
     if (!EXILock (0, 1, NULL))
     {
         return FALSE;
@@ -305,7 +308,7 @@ __OSReadROM (void* buffer, s32 length, long offset)
         EXIUnlock (0);
         return FALSE;
     }
-    cmd = offset << 6;
+    cmd = (u32)(offset << 6);
     err = FALSE;
     err |= !EXIImm (0, &cmd, 4, 1, 0);
     err |= !EXISync (0);
@@ -339,7 +342,7 @@ __OSReadROMAsync (void* buffer, s32 length, long offset, void (*callback)())
 
     ASSERTLINE (0x203, length <= 1024);
     ASSERTLINE (0x204, callback);
-    DCInvalidateRange (buffer, length);
+    DCInvalidateRange (buffer, (u32)length);
     Scb.callback = callback;
     if (!EXILock (0, 1, NULL))
     {
@@ -350,7 +353,7 @@ __OSReadROMAsync (void* buffer, s32 length, long offset, void (*callback)())
         EXIUnlock (0);
         return FALSE;
     }
-    cmd = offset << 6;
+    cmd = (u32)(offset << 6);
     err = FALSE;
     err |= !EXIImm (0, &cmd, 4, 1, 0);
     err |= !EXISync (0);
@@ -362,9 +365,9 @@ u32
 OSGetSoundMode ()
 {
     OSSram* sram = __OSLockSram();
-    u32     mode = (sram->flags & 4) ? 1 : 0;
+    u32     mode = (u32)(sram->flags & 4) ? (u32)1 : (u32)0;
 
-    __OSUnlockSram (0);
+    __OSUnlockSram (FALSE);
     return mode;
 }
 
@@ -373,6 +376,7 @@ OSSetSoundMode (u32 mode)
 {
     OSSram* sram;
     BOOL    unused;
+#pragma unused(unused)
 
     ASSERTLINE (0x22A, mode == OS_SOUND_MODE_MONO || mode == OS_SOUND_MODE_STEREO);
     mode *= 4;
@@ -380,31 +384,33 @@ OSSetSoundMode (u32 mode)
     sram = __OSLockSram();
     if (mode == (sram->flags & 4))
     {
-        __OSUnlockSram (0);
+        __OSUnlockSram (FALSE);
         return;
     }
     sram->flags &= 0xFFFFFFFB;
     sram->flags |= mode;
-    __OSUnlockSram (1);
+    __OSUnlockSram (TRUE);
 }
 
 u32
 OSGetProgressiveMode ()
 {
     OSSram* sram;
-    u32     mode;
+    BOOL    mode;
 
     sram = __OSLockSram();
     mode = (sram->flags & 0x80) ? TRUE : FALSE;
     __OSUnlockSram (FALSE);
-    return mode;
+    return (u32)mode;
 }
 
 void
 OSSetProgressiveMode (u32 mode)
 {
-    char    trash[0x2];       // TODO: BOOLermediate vars or inlines?
+    char    trash[0x2];       // TODO: intermediate vars or inlines?
     OSSram* sram;
+#pragma unused(trash)
+
     mode <<= 7;
     mode &= 0x80;
 
@@ -424,9 +430,9 @@ u32
 OSGetVideoMode ()
 {
     OSSram* sram = __OSLockSram();
-    u32     mode = sram->flags & 3;
+    u32     mode = (u32)(sram->flags & 3);
 
-    __OSUnlockSram (0);
+    __OSUnlockSram (FALSE);
     return mode;
 }
 
@@ -435,6 +441,7 @@ OSSetVideoMode (u32 mode)
 {
     OSSram* sram;
     BOOL    unused;
+#pragma unused(unused)
 
     ASSERTLINE (0x249, OS_VIDEO_MODE_NTSC <= mode && mode <= OS_VIDEO_MODE_MPAL);
 
@@ -442,12 +449,12 @@ OSSetVideoMode (u32 mode)
     sram = __OSLockSram();
     if (mode == (sram->flags & 3))
     {
-        __OSUnlockSram (0);
+        __OSUnlockSram (FALSE);
         return;
     }
     sram->flags &= 0xFFFFFFFC;
     sram->flags |= mode;
-    __OSUnlockSram (1);
+    __OSUnlockSram (TRUE);
 }
 
 u16
@@ -456,7 +463,7 @@ OSGetLanguage ()
     OSSram* sram = __OSLockSram();
     u16     language = sram->language;
 
-    __OSUnlockSram (0);
+    __OSUnlockSram (FALSE);
     return language;
 }
 
@@ -465,14 +472,15 @@ OSSetLanguage (u16 language)
 {
     OSSram* sram = __OSLockSram();
     BOOL    unused;
+#pragma unused(unused)
 
     if (language == sram->language)
     {
-        __OSUnlockSram (0);
+        __OSUnlockSram (FALSE);
         return;
     }
-    sram->language = language;
-    __OSUnlockSram (1);
+    sram->language = (u8)language;
+    __OSUnlockSram (TRUE);
 }
 
 u16
@@ -480,8 +488,10 @@ __OSGetBootMode ()
 {
     OSSram* sram = __OSLockSram();
     u16     ntd = sram->ntd;
-    __OSUnlockSram (0);
-    return ntd & 0x80;
+
+    __OSUnlockSram (FALSE);
+
+    return (u16)(ntd & 0x80);
 }
 
 void
@@ -489,15 +499,16 @@ __OSSetBootMode (u16 ntd)
 {
     OSSram* sram;
     BOOL    unused;
+#pragma unused(unused)
 
     ntd &= 0x80;
     sram = __OSLockSram();
     if (ntd == (sram->ntd & 0x80U))
     {
-        __OSUnlockSram (0);
+        __OSUnlockSram (FALSE);
         return;
     }
     sram->ntd &= 0xFFFFFF7F;
     sram->ntd |= ntd;
-    __OSUnlockSram (1);
+    __OSUnlockSram (TRUE);
 }

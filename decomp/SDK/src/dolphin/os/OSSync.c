@@ -1,5 +1,7 @@
 #include <dolphin/os.h>
 
+#include <string.h>
+
 #include "OSPrivate.h"
 
 void __OSSystemCallVectorStart ();

@@ -22,7 +22,7 @@ DBIsDebuggerPresent (void)
     {
         return FALSE;
     }
-    return __DBInterface->bPresent;
+    return (BOOL)__DBInterface->bPresent;
 }
 
 void
@@ -53,14 +53,14 @@ __DBExceptionDestination (void)
 BOOL
 __DBIsExceptionMarked (__OSException exception)
 {
-    u32 mask = (1 << exception);
-    return __DBInterface->exceptionMask & mask;
+    u32 mask = (u32)(1 << exception);
+    return (BOOL)(__DBInterface->exceptionMask & mask);
 }
 
 void
 __DBMarkException (u8 exception, int value)
 {
-    u32 mask = (1 << exception);
+    u32 mask = (u32)(1 << exception);
 
     if (value != 0)
     {
@@ -81,4 +81,9 @@ __DBSetPresent (u32 value)
 void
 DBPrintf (char* str, ...)
 {
+#pragma unused(str)
+
+#if 0
+
+#endif
 }

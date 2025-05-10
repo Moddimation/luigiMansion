@@ -46,6 +46,8 @@ OSGetTick (void)
 asm static void
 __SetTime (s64 time)
 {
+#pragma unused(time)
+
 #ifdef __MWERKS__
     nofralloc;
     li    r5, 0;
@@ -145,10 +147,7 @@ GetDates (int days, OSCalendarTime* td)
     td->yday = days;
 
     md = IsLeapYear (year) ? LeapYearDays : YearDays;
-    for (month = MONTH_MAX; days < md[--month];)
-    {
-        ;
-    }
+    for (month = MONTH_MAX; days < md[--month];) { ; }
     td->mon = month;
     td->mday = days - md[month] + 1;
 }
@@ -167,8 +166,8 @@ OSTicksToCalendarTime (s64 ticks, OSCalendarTime* td)
         ASSERTLINE (330, 0 <= d);
     }
 
-    td->usec = OS_TICKS_TO_USEC (d) % USEC_MAX;
-    td->msec = OS_TICKS_TO_MSEC (d) % MSEC_MAX;
+    td->usec = (int)(OS_TICKS_TO_USEC (d) % USEC_MAX);
+    td->msec = (int)(OS_TICKS_TO_MSEC (d) % MSEC_MAX);
 
     ASSERTLINE (334, 0 <= td->usec);
     ASSERTLINE (335, 0 <= td->msec);
@@ -180,8 +179,8 @@ OSTicksToCalendarTime (s64 ticks, OSCalendarTime* td)
                 0 <= OSTicksToSeconds (ticks) / 86400 + BIAS &&
                     OSTicksToSeconds (ticks) / 86400 + BIAS <= INT_MAX);
 
-    days = (OS_TICKS_TO_SEC (ticks) / SECS_IN_DAY) + BIAS;
-    secs = OS_TICKS_TO_SEC (ticks) % SECS_IN_DAY;
+    days = (int)((OS_TICKS_TO_SEC (ticks) / SECS_IN_DAY) + BIAS);
+    secs = (int)(OS_TICKS_TO_SEC (ticks) % SECS_IN_DAY);
     if (secs < 0)
     {
         days -= 1;

@@ -585,7 +585,9 @@ LCAllocNoInvalidate (void* addr, u32 nBytes)
     u32 hid2 = PPCMfhid2();
 
     ASSERTMSGLINE (0x55F, !((u32)addr & 31), "LCAllocNoFlush(): addr must be 32 byte aligned");
-    ASSERTMSGLINE (0x561, !((u32)nBytes & 31), "LCAllocNoFlush(): nBytes must be 32 byte aligned");
+    ASSERTMSGLINE (0x561,
+                   !((u32)nBytes & 31),
+                   "LCAllocNoFlush(): nBytes must be 32 byte aligned");
 
     if ((hid2 & 0x10000000) == 0)
     {
@@ -733,7 +735,7 @@ L2GlobalInvalidate (void)
 {
     L2Disable();
     PPCMtl2cr (PPCMfl2cr() | 0x00200000);
-    while (PPCMfl2cr() & 0x00000001u);
+    while (PPCMfl2cr() & 0x00000001u) {}
     PPCMtl2cr (PPCMfl2cr() & ~0x00200000);
     while (PPCMfl2cr() & 0x00000001u)
     {
@@ -766,6 +768,8 @@ L2SetWriteThrough (BOOL writeThrough)
 void
 DMAErrorHandler (OSError error, OSContext* context, ...)
 {
+#pragma unused(error)
+
     u32 hid2 = PPCMfhid2();
 
     OSReport ("Machine check received\n");

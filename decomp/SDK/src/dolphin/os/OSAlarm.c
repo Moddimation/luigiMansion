@@ -18,11 +18,11 @@ static void DecrementerExceptionCallback (register __OSException exception,
                                           register OSContext*    context);
 static void DecrementerExceptionHandler (__OSException exception, OSContext* context);
 
-#define ASSERTREPORT(line, cond)                                                                   \
-    if (!(cond))                                                                                   \
-    {                                                                                              \
-        OSReport ("OSCheckAlarmQueue: Failed " #cond " in %d", line);                              \
-        return 0;                                                                                  \
+#define ASSERTREPORT(line, cond)                                                               \
+    if (!(cond))                                                                               \
+    {                                                                                          \
+        OSReport ("OSCheckAlarmQueue: Failed " #cond " in %d", line);                          \
+        return 0;                                                                              \
     }
 
 BOOL
@@ -227,6 +227,8 @@ OSCancelAlarm (OSAlarm* alarm)
 static void
 DecrementerExceptionCallback (register __OSException exception, register OSContext* context)
 {
+#pragma unused(exception)
+
     OSAlarm*       alarm;
     OSAlarm*       next;
     OSAlarmHandler handler;
@@ -279,6 +281,8 @@ DecrementerExceptionCallback (register __OSException exception, register OSConte
 static ASM void
 DecrementerExceptionHandler (register __OSException exception, register OSContext* context)
 {
+#pragma unused(exception)
+
 #ifdef __MWERKS__
     nofralloc;
     OS_EXCEPTION_SAVE_GPRS (context);

@@ -129,6 +129,7 @@ int __to_gm_time (void);
 
 unsigned long __OSIsDebuggerPresent (void);
 void          __OSPSInit (void);
+u8            __OSGetDIConfig (void);
 
 extern void* BOOT_REGION_START;
 extern void* BOOT_REGION_END;

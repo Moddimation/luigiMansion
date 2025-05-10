@@ -66,7 +66,7 @@ typedef enum
     VI_TVMODE_DEBUG_INT = 12,     // VI_TVMODE(VI_DEBUG, VI_INTERLACE),
 
     VI_TVMODE_DEBUG_PAL_INT = 16, // VI_TVMODE(VI_DEBUG_PAL, VI_INTERLACE),
-    VI_TVMODE_DEBUG_PAL_DS = 17,  // VI_TVMODE(VI_DEBUG_PAL, VI_NON_INTERLACE)
+    VI_TVMODE_DEBUG_PAL_DS = 17   // VI_TVMODE(VI_DEBUG_PAL, VI_NON_INTERLACE)
 } VITVMode;
 
 typedef enum
@@ -79,7 +79,7 @@ typedef enum
     VI_TV_FMT_EURGB60,            // 5
     VI_TV_FMT_6,                  // 6
     VI_TV_FMT_7,                  // 7
-    VI_TV_FMT_8,                  // 8
+    VI_TV_FMT_8                   // 8
 } VITvFormat;
 
 typedef enum VIScanMode
@@ -92,7 +92,7 @@ typedef enum VIScanMode
 typedef enum VIXFBMode
 {
     VI_XFB_MODE_SF,
-    VI_XFB_MODE_DF,
+    VI_XFB_MODE_DF
 } VIXFBMode;
 
 typedef void (*VIRetraceCallback) (u32 retraceCount);

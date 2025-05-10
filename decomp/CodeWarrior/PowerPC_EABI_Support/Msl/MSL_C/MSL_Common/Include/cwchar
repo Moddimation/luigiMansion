@@ -1,0 +1,133 @@
+/*  Metrowerks Standard Library  */
+
+/*  $Date: 1999/03/12 20:04:56 $ 
+ *  $Revision: 1.9 $ 
+ *  $NoKeywords: $ 
+ *
+ *		Copyright 1995-1999 Metrowerks, Inc.
+ *		All rights reserved.
+ */
+
+/*
+ *	cwchar
+ */
+
+
+#ifndef __wchar
+#define __wchar
+
+#ifndef __NO_WIDE_CHAR				/* mm 981020 */
+
+#include <ansi_parms.h>
+
+#include <wchar_io.h>
+
+#ifndef RC_INVOKED
+
+#pragma options align=native
+#if defined(__CFM68K__) && !defined(__USING_STATIC_LIBS__)
+	#pragma import on
+#endif
+
+#ifdef __cplusplus
+	#ifdef _MSL_USING_NAMESPACE
+		namespace std {
+	#endif
+	extern "C" {
+#endif
+
+#ifndef _WCTYPE_T_DEFINED
+#define _WCTYPE_T_DEFINED
+
+typedef wchar_t wint_t;
+typedef wchar_t wctype_t;
+typedef int 	mbstate_t;
+typedef wchar_t Wint_t;
+
+#endif /* ifndef _WCTYPE_T_DEFINED */
+
+
+#ifndef WEOF
+#define WEOF (wint_t)(0xFFFF)
+#endif /* ifndef WEOF */
+
+#ifndef EILSEQ
+#define  EILSEQ          88
+#endif /* ifndef EILSEQ */
+
+/* extern prototypes */
+
+#if (__dest_os	== __win32_os  || __dest_os	== __wince_os)
+	/* This #ifdef block contains declarations found in the corresponding */
+	/* Visual C++ ANSI header.		*/
+
+	/* These functions are defined in extras.c */
+    int _wtoi (const wchar_t *str);
+	int _wcsicmp(const wchar_t *s1, const wchar_t *s2);
+	int _wcsnicmp(const wchar_t *s1, const wchar_t *s2, size_t n);
+    wchar_t *_itow(int val, wchar_t *str, int radix);
+    wchar_t *_wstrrev(wchar_t * str);
+	wchar_t *_wcsrev(wchar_t *str);
+	wchar_t *_wcsdup(const wchar_t *str);
+	wchar_t *_wcsupr(wchar_t *str);
+	wchar_t *_wcslwr(wchar_t *str);
+	wchar_t *_wcsset(wchar_t *str, wchar_t wc);
+	wchar_t *_wcsnset(wchar_t *str, wchar_t wc, size_t n);
+	wchar_t *_wcsspnp(const wchar_t *s1, const wchar_t *s2);
+#endif
+
+#ifdef __cplusplus
+	}
+	#ifdef _MSL_USING_NAMESPACE
+		}
+	#endif
+#endif
+
+#if defined(__CFM68K__) && !defined(__USING_STATIC_LIBS__)
+	#pragma import reset
+#endif
+#pragma options align=reset
+
+#endif /* RC_INVOKED */
+
+#include <wstdio.h>
+#include <wscanf.h>
+#include <wcstold.h>
+#include <wcstoul.h>
+#include <wstring.h>
+#include <wprintf.h>
+#include <wmem.h>
+#include <wtime.h>
+#include <wctrans.h>
+
+/*	
+int		fwide(FILE * file, int mode);  The prototype for this function is in cstdio
+
+	These functions are not yet implemented the prototypes are listed here as a comment
+	for the benefit of those who are interested
+	
+wint_t	btowc(int c);
+size_t 	mbrlen(const char *s, size_t n, mbstate_t *ps);
+size_t 	mbrtowc(wchar_t *pwc, const char *s, size_t n, mbstate_t *ps);
+int 	mbsinit(const mbstate_t *ps);
+size_t 	mbsrtowcs(wchar_t *dst, const char **src, size_t len, mbstate_t *ps);
+size_t 	wcrtomb(char *s, wchar_t wc, mbstate_t *ps);
+size_t 	wcsrtombs(char *dst, const wchar_t **src, size_t len, mbstate_t *ps);
+float   wcstof(const wchar_t * restrict nptr, wchar_t ** restrict endptr);
+*/
+#endif /* #ifndef __NO_WIDE_CHAR	*/			/* mm 981020 */
+
+#endif /* ifndef __wchar_h__ */
+
+
+/*  Change Record
+ *	980121 	JCM  First code release.
+ *  980324  BLC  Added prototypes for addition Win32 wchar_t functions
+ *  980325  BLC  Moved prototypes into extern "C" block
+ *  980518  mf   added a couple of non-standard wchar prototypes need for ce
+ *  981020  mm   added #ifndef __NO_WIDE_CHAR wrappers
+ *  mm 990217    removed #include cstddef as not needed and moved definitions of
+ *               WCHAR_MIN and WCHAR_MAX to wchar_t.h
+ *  990312  BLC  fixed up extras.c prototypes for new function, eliminated
+ *               wcsdup prototype, since its really called _wcsdup
+ */

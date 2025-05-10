@@ -1,0 +1,264 @@
+/*  Metrowerks Standard Library  */
+
+/*  $Date: 1999/07/30 18:09:53 $ 
+ *  $Revision: 1.10.4.3 $ 
+ *  $NoKeywords: $ 
+ *
+ *		Copyright 1995-1999 Metrowerks, Inc.
+ *		All rights reserved.
+ */
+
+/*
+ *	cstdlib           hh  971206  this file used to be stdlib.h
+ */
+ 
+#ifndef __cstdlib__
+#define __cstdlib__
+
+#include <ansi_parms.h>
+
+#include <div_t.h>
+#include <size_t.h>
+#include <null.h>
+#ifndef __NO_WIDE_CHAR				/* mm 980204 */
+#include <wchar_t.h>				/* mm 990217 */
+#endif								/* mm 980204 */
+
+#ifndef RC_INVOKED	/*  hh  971230  */
+
+#pragma options align=native
+#if defined(__CFM68K__) && !defined(__USING_STATIC_LIBS__)
+	#pragma import on
+#endif
+
+#ifdef __cplusplus        /* hh  971206 */
+	#ifdef _MSL_USING_NAMESPACE
+		namespace std {
+	#endif
+	extern "C" {
+#endif
+
+#define RAND_MAX		32767
+#define MB_CUR_MAX	    1
+
+#define EXIT_SUCCESS		0
+#define EXIT_FAILURE		1
+
+#if (__dest_os	!= __powertv_os)
+#define _MAX_PATH				1024
+#endif
+
+#ifndef _No_Floating_Point
+# if __INTEL__
+    #pragma k63d_calls off 
+# endif    
+double				atof(const char * str);
+double				strtod (const char * str, char ** end);
+# if __INTEL__
+    #pragma k63d_calls reset 
+# endif
+
+#endif
+int					atoi(const char * str);
+long				atol(const char * str);
+
+#ifndef _No_Floating_Point
+double				strtod (const char * str, char ** end);
+#endif
+long				strtol (const char * str, char ** end, int base);
+unsigned long		strtoul(const char * str, char ** end, int base);
+
+#ifdef __MSL_LONGLONG_SUPPORT__               							/*mm 961219*/
+long long			strtoll (const char * str, char ** end, int base);	/*mm 961219*/
+unsigned long long	strtoull(const char * str, char ** end, int base);	/*mm 961219*/
+#endif  /*__MSL_LONGLONG_SUPPORT__*/                      				/*mm 961220*/
+
+int		rand (void);
+void	srand(unsigned int seed);
+#if __dest_os == __be_os               /* mm 970708 */
+int		random (void);                 /* mm 970708 */
+void	srandom(unsigned int seed);    /* mm 970708 */
+#endif                                 /* mm 970708 */
+
+void *	calloc(size_t nmemb, size_t size);
+void	free(void *ptr);
+void *	malloc(size_t size);
+void *	realloc(void * ptr, size_t size);
+size_t	__msize(void * ptr);
+
+#if __VEC__
+/*
+ * AltiVec memory-related routines which 16-byte align the blocks.  
+ */
+void *	vec_calloc(size_t nmemb, size_t size);
+void	vec_free(void *ptr);
+void *	vec_malloc(size_t size);
+void *	vec_realloc(void * ptr, size_t size);
+#endif
+
+void	abort(void);
+int		atexit(void (*func)(void));
+void	exit(int status);
+
+char *	getenv(const char * name);
+int		system(const char * command);
+
+typedef int (*_compare_function)(const void*, const void*);                 /* mm 961031 */
+
+void*	bsearch(const void*, const void*, size_t, size_t, _compare_function); /* mm 961031 */
+
+void  qsort(void*, size_t, size_t, _compare_function);                      /* mm 961031 */
+							
+#if __POWERPC__
+/* hh 980122 C++ must use C lib
+	#if __cplusplus && !__MOTO__ && !__MRC__
+	
+		inline int	abs (int n) { return(__abs(n)); }
+		inline long	labs(long n){ return(__labs(n)); }
+	
+	#else
+*/
+		int		abs (int n);
+		long	labs(long n);
+		#ifdef __MSL_LONGLONG_SUPPORT__  /*  990624  vss */
+		  long long	llabs(long long n); /* hh 980122 added long long support */
+		#endif
+		#ifndef __cplusplus  /* hh 980206 these interfere with overloaded inlines in C++ */
+			#if !__MOTO__ && !__MRC__
+				#define abs(n)	__abs(n)
+				#define labs(n)	__labs(n)
+			#endif
+		#endif
+	
+/*	#endif hh 980122 */
+
+#elif __MIPS__ && !__MIPS_16__
+
+		int			abs (int n);
+		long		labs(long n);
+		long long	llabs(long long n);
+		
+		#ifndef __cplusplus 
+			#define abs(n)			__abs(n)
+			#define labs(n)			__labs(n)
+			#if __n64abi__
+				#define llabs(n)	__labs(n)
+			#endif
+		#endif
+
+#else
+
+	int		abs (int n);
+	long	labs(long n);
+#ifdef __MSL_LONGLONG_SUPPORT__					/* mm 981023 */
+	long long	llabs(long long n);  /* hh 980122 added long long support */
+#endif	/* #ifdef __MSL_LONGLONG_SUPPORT__	*/	/* mm 981023 */
+
+#endif
+
+div_t		div (int numerator,  int denominator);
+ldiv_t	ldiv(long numerator, long denominator);
+#ifdef __MSL_LONGLONG_SUPPORT__					/* mm 981023 */
+lldiv_t	lldiv(long long numerator, long long denominator);  /* hh 980122 added long long support */
+#endif	/* #ifdef __MSL_LONGLONG_SUPPORT__	*/	/* mm 981023 */
+/* hh 980122 Added*/
+#ifdef __cplusplus
+	} /* extern "C" */
+	inline long abs(long n)
+		{return labs(n);}
+	  #ifdef __MSL_LONGLONG_SUPPORT__  /*  990624  vss */
+	    inline long long abs(long long n)
+		  {return llabs(n);}
+	    inline lldiv_t div(long long numerator, long long denominator)
+		  {return lldiv(numerator, denominator);}
+	  #endif
+	  inline ldiv_t div(long numerator, long denominator)
+		{return ldiv(numerator, denominator);}
+	extern "C" {
+#endif
+
+int			mblen(const char * s, size_t n);
+
+#ifndef __NO_WIDE_CHAR  /*  990624  */
+int			mbtowc(wchar_t * pwc, const char * s, size_t n);
+int			wctomb(char * s, wchar_t wchar);
+size_t	    mbstowcs(wchar_t * pwcs, const char * s, size_t n);
+size_t	    wcstombs(char * s, const wchar_t * pwcs, size_t n);
+#endif
+
+#if (__dest_os	== __win32_os || __dest_os	== __wince_os)
+
+	/* This #ifdef block contains declarations found in the corresponding */
+	/* Visual C++ ANSI header.		*/
+
+	/* These functions are defined in extras.c */
+	char * _fullpath(char * absPath, const char * relPath, size_t maxLength);
+#ifndef _No_Floating_Point
+	char *_gcvt(double value, int digits, char *buffer);
+#endif
+	char * _itoa(int val, char *str, int radix);
+	char * _ultoa(unsigned long val, char *str, int radix);
+    wchar_t * _ltow(unsigned long val, wchar_t *str, int radix) ;
+	#define _ltoa(x, y, z) _itoa(x, y, z)
+	/* added for MFC support --mf 022798 */
+	#define _MAX_DRIVE  3   /* max. length of drive component */
+    #define _MAX_DIR    256 /* max. length of path component */
+    #define _MAX_EXT    256 /* max. length of extension component */
+    #define _MAX_FNAME 256
+	#define __max(a,b)  (((a) > (b)) ? (a) : (b))
+    #define __min(a,b)  (((a) < (b)) ? (a) : (b))
+	char * _strlwr (char *string);
+    void _splitpath (const char *path, char *drive, char *dir, char *fname, 
+                     char *ext );  
+    #ifndef __NO_WIDE_CHAR  /*  990624  */
+	wchar_t * _ultow(unsigned long val, wchar_t *str, int radix) ;                    
+	#endif
+/* end of MFC support */                     
+	extern int _MSL_DLLDATA _doserrno;
+		
+#if ( __dest_os == __wince_os)
+ 	
+  unsigned long __cdecl _beginthreadex(void *, unsigned,
+          	unsigned (__stdcall *) (void *), void *, unsigned, unsigned *);      
+  void __cdecl _endthreadex(unsigned);
+  
+#endif  /*  __dest_os == __wince_os  */
+  	
+#endif  /* (__dest_os	== __win32_os || __dest_os	== __wince_os) */
+
+
+#ifdef __cplusplus             /* hh  971206 */
+	}
+	#ifdef _MSL_USING_NAMESPACE
+		}
+	#endif
+#endif
+
+#if defined(__CFM68K__) && !defined(__USING_STATIC_LIBS__)
+	#pragma import reset
+#endif
+#pragma options align=reset
+
+#endif /* RC_INVOKED */
+
+#endif /* __cstdlib__ */
+
+/*     Change record
+ * mm 961031  Improved legibility with introduction of typedef
+ * mm 961220	line 44    Added headers for strtoll and strtoull for long long support
+ * sm 970723	Disabled all use of doubles when _No_Floating_Point defined.
+ * mm 970708  Inserted Be changes
+ * hh  971206  Changed file name from stdlib.h to cstdlib and added namespace support.
+ * hh 971230 added RC_INVOKED wrapper
+ * hh 980122 C++ must use C lib. commented out inlined abs and labs
+ * hh 980122 added long long support llabs, lldiv
+ * hh 980122 Added C++ inlines for abs and div
+ * hh 980206 these #defines (abs, labs) interfere with overloaded inlines in C++
+ * mf 980505 enabled win32 specific prototypes for wince 
+ * hh  980627 changed include from wctype.h to cwctype
+ * mm 981023 added wrappers round long long support
+ * blc 990209 added __msize prototype
+ * mm 990217 Deleted #include of cstddef and replaced by #include <wchar_t.h>
+ * mf 990404 turned off k6 calling convention for atof and strtod
+ * vss 990624 guards for longlong and wide char
+*/

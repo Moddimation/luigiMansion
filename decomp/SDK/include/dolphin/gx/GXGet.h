@@ -35,7 +35,7 @@ u16           GXGetTexObjHeight (const GXTexObj* to);
 GXTexWrapMode GXGetTexObjWrapS (const GXTexObj* to);
 GXTexWrapMode GXGetTexObjWrapT (const GXTexObj* to);
 void*         GXGetTexObjData (const GXTexObj* to);
-;
+
 void         GXGetTexObjAll (const GXTexObj* obj,
                              void**          image_ptr,
                              u16*            width,
@@ -62,18 +62,21 @@ GXBool       GXGetTexObjBiasClamp (const GXTexObj* tex_obj);
 GXBool       GXGetTexObjEdgeLOD (const GXTexObj* tex_obj);
 GXAnisotropy GXGetTexObjMaxAniso (const GXTexObj* tex_obj);
 u32          GXGetTexObjTlut (const GXTexObj* tex_obj);
-void  GXGetTlutObjAll (const GXTlutObj* tlut_obj, void** data, GXTlutFmt* format, u16* numEntries);
-void* GXGetTlutObjData (const GXTlutObj* tlut_obj);
-GXTlutFmt GXGetTlutObjFmt (const GXTlutObj* tlut_obj);
-u16       GXGetTlutObjNumEntries (const GXTlutObj* tlut_obj);
-void      GXGetTexRegionAll (const GXTexRegion* region,
-                             u8*                is_cached,
-                             u8*                is_32b_mipmap,
-                             u32*               tmem_even,
-                             u32*               size_even,
-                             u32*               tmem_odd,
-                             u32*               size_odd);
-void      GXGetTlutRegionAll (const GXTlutRegion* region, u32* tmem_addr, GXTlutSize* tlut_size);
+void         GXGetTlutObjAll (const GXTlutObj* tlut_obj,
+                              void**           data,
+                              GXTlutFmt*       format,
+                              u16*             numEntries);
+void*        GXGetTlutObjData (const GXTlutObj* tlut_obj);
+GXTlutFmt    GXGetTlutObjFmt (const GXTlutObj* tlut_obj);
+u16          GXGetTlutObjNumEntries (const GXTlutObj* tlut_obj);
+void         GXGetTexRegionAll (const GXTexRegion* region,
+                                u8*                is_cached,
+                                u8*                is_32b_mipmap,
+                                u32*               tmem_even,
+                                u32*               size_even,
+                                u32*               tmem_odd,
+                                u32*               size_odd);
+void GXGetTlutRegionAll (const GXTlutRegion* region, u32* tmem_addr, GXTlutSize* tlut_size);
 
 // Transform
 void GXGetProjectionv (f32* ptr);

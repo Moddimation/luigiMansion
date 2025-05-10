@@ -10,18 +10,14 @@ typedef u16 unk16;
 typedef u32 unk32;
 typedef u64 unk64;
 
-#ifndef __MWERKS__
-#define wchar_t u32
-#endif
-
-#define DEFINE_ENUM_TYPE(name, ...)                                                                \
-    struct name                                                                                    \
-    {                                                                                              \
-        enum Values                                                                                \
-        {                                                                                          \
-            __VA_ARGS__                                                                            \
-        };                                                                                         \
-        typedef Values Type;                                                                       \
+#define DEFINE_ENUM_TYPE(name, ...)                                                            \
+    struct name                                                                                \
+    {                                                                                          \
+        enum Values                                                                            \
+        {                                                                                      \
+            __VA_ARGS__                                                                        \
+        };                                                                                     \
+        typedef Values Type;                                                                   \
     }
 
 #endif // _TYPES_H

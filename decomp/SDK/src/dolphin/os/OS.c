@@ -2,9 +2,9 @@
 #include <dolphin/exi.h>
 #include <dolphin/os.h>
 
-void EnableMetroTRKInterrupts (void);
+#include <DolphinTrkInit.h>
+#include <string.h>
 
-// internal headers
 #include "OSPrivate.h"
 
 #define OS_BI2_DEBUG_ADDRESS    0x800000F4
@@ -214,8 +214,9 @@ OSInit ()
 }
 
 static u32 __OSExceptionLocations[] = {
-    0x00000100, 0x00000200, 0x00000300, 0x00000400, 0x00000500, 0x00000600, 0x00000700, 0x00000800,
-    0x00000900, 0x00000C00, 0x00000D00, 0x00000F00, 0x00001300, 0x00001400, 0x00001700,
+    0x00000100, 0x00000200, 0x00000300, 0x00000400, 0x00000500,
+    0x00000600, 0x00000700, 0x00000800, 0x00000900, 0x00000C00,
+    0x00000D00, 0x00000F00, 0x00001300, 0x00001400, 0x00001700,
 };
 
 #if DEBUG
@@ -465,6 +466,8 @@ void __OSUnhandledException (__OSException exception, OSContext* context, u32 ds
 ASM void
 OSDefaultExceptionHandler (register __OSException exception, register OSContext* context)
 {
+#pragma unused(exception)
+
 #ifdef __MWERKS__
     nofralloc;
     OS_EXCEPTION_SAVE_GPRS (context);
@@ -493,5 +496,5 @@ __OSPSInit (void)
 u8
 __OSGetDIConfig (void)
 {
-    return __DIRegs[DI_CFG];
+    return (u8)__DIRegs[DI_CFG];
 }

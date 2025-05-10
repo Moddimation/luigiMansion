@@ -81,9 +81,7 @@
 #define ASSERT_HANG(cond)                                                                      \
     if (!(cond))                                                                               \
     {                                                                                          \
-        while (true)                                                                           \
-        {                                                                                      \
-        }                                                                                      \
+        while (true) {}                                                                        \
     }
 
 // Get the maximum of two values
@@ -135,12 +133,12 @@
 
 #ifndef __MWERKS__
 
-#ifndef __PPCGEKKO__
-#define __PPCGEKKO__
-#endif
-
 #ifdef __POWERPC__
 #undef __POWERPC__
+#endif
+
+#ifndef __PPC_EABI__
+#define __PPC_EABI__
 #endif
 
 #define __option(x)   0

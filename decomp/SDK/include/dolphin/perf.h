@@ -1,6 +1,7 @@
 #ifndef _DOLPHIN_PERF_H_
 #define _DOLPHIN_PERF_H_
 
+#include <dolphin/gx/GXStruct.h>
 #include <types.h>
 
 #ifdef __cplusplus
@@ -14,54 +15,54 @@ typedef enum
 {
     PERF_CPU_EVENT,
     PERF_CPU_GP_EVENT,
-    PERF_GP_EVENT,
+    PERF_GP_EVENT
 } PerfType;
+
+typedef struct PerfSample
+{
+    u8  id;                ///< 0x00
+    u32 cpuTimeStampStart; ///< 0x04
+    u32 cpuTimeStampEnd;   ///< 0x08
+    u32 gpTimeStampStart;  ///< 0x0C
+    u32 gpTimeStampEnd;    ///< 0x10
+    int interrupted;       ///< 0x14
+    u32 origcpuStart;      ///< 0x18
+    u32 origgpStart;       ///< 0x1C
+    u32 cacheMisses[4];    ///< 0x20
+    u32 instructions[4];   ///< 0x30
+    u32 cpReq[2];          ///< 0x40
+    u32 tcReq[2];          ///< 0x48
+    u32 cpuRdReq[2];       ///< 0x50
+    u32 cpuWrReq[2];       ///< 0x58
+    u32 dspReq[2];         ///< 0x60
+    u32 ioReq[2];          ///< 0x68
+    u32 viReq[2];          ///< 0x70
+    u32 peReq[2];          ///< 0x78
+    u32 rfReq[2];          ///< 0x80
+    u32 fiReq[2];          ///< 0x88
+    u32 xfWaitIn[2];       ///< 0x90
+    u32 xfWaitOut[2];      ///< 0x98
+    u32 rasBusy[2];        ///< 0xA0
+    u32 rasClocks[2];      ///< 0xA8
+} PerfSample;
 
 struct Frame
 {
     // total size: 0x10
-    struct PerfSample* samples;         // offset 0x0, size 0x4
-    s32                lastSample;      // offset 0x4, size 0x4
-    u32                end;             // offset 0x8, size 0x4
-    u32                cachemisscycles; // offset 0xC, size 0x4
+    PerfSample* samples;         // offset 0x0, size 0x4
+    s32         lastSample;      // offset 0x4, size 0x4
+    u32         end;             // offset 0x8, size 0x4
+    u32         cachemisscycles; // offset 0xC, size 0x4
 };
 
 struct PerfEvent
 {
     // total size: 0x10
-    char*           name;               // offset 0x0, size 0x4
-    PerfType        type;               // offset 0x4, size 0x4
-    s32             currSample;         // offset 0x8, size 0x4
-    struct _GXColor color;              // offset 0xC, size 0x4
+    char*    name;                      // offset 0x0, size 0x4
+    PerfType type;                      // offset 0x4, size 0x4
+    s32      currSample;                // offset 0x8, size 0x4
+    GXColor  color;                     // offset 0xC, size 0x4
 };
-
-typedef struct PerfSample
-{
-    u8  id;                             ///< 0x00
-    u32 cpuTimeStampStart;              ///< 0x04
-    u32 cpuTimeStampEnd;                ///< 0x08
-    u32 gpTimeStampStart;               ///< 0x0C
-    u32 gpTimeStampEnd;                 ///< 0x10
-    int interrupted;                    ///< 0x14
-    u32 origcpuStart;                   ///< 0x18
-    u32 origgpStart;                    ///< 0x1C
-    u32 cacheMisses[4];                 ///< 0x20
-    u32 instructions[4];                ///< 0x30
-    u32 cpReq[2];                       ///< 0x40
-    u32 tcReq[2];                       ///< 0x48
-    u32 cpuRdReq[2];                    ///< 0x50
-    u32 cpuWrReq[2];                    ///< 0x58
-    u32 dspReq[2];                      ///< 0x60
-    u32 ioReq[2];                       ///< 0x68
-    u32 viReq[2];                       ///< 0x70
-    u32 peReq[2];                       ///< 0x78
-    u32 rfReq[2];                       ///< 0x80
-    u32 fiReq[2];                       ///< 0x88
-    u32 xfWaitIn[2];                    ///< 0x90
-    u32 xfWaitOut[2];                   ///< 0x98
-    u32 rasBusy[2];                     ///< 0xA0
-    u32 rasClocks[2];                   ///< 0xA8
-} PerfSample;
 
 typedef void* (*PERFAllocator) (u32 size);
 typedef void  (*PERFDeallocator) (void* block);

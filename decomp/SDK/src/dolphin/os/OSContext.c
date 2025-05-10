@@ -10,6 +10,8 @@ volatile OSContext* __OSFPUContext     AT_ADDRESS (OS_BASE_CACHED | 0x00D8);
 static ASM void
 __OSLoadFPUContext (register u32 p0, register OSContext* fpuContext)
 {
+#pragma unused(p0)
+
 #ifdef __MWERKS__
     nofralloc;
     lhz r5, fpuContext->state;
@@ -96,6 +98,9 @@ _return:
 static ASM void
 __OSSaveFPUContext (register u32 p0, register u32 p1, register OSContext* fpuContext)
 {
+#pragma unused(p0)
+#pragma unused(p1)
+
 #ifdef __MWERKS__
     nofralloc;
 
@@ -377,7 +382,7 @@ OSGetStackPointer ()
     mr r3, r1;
     blr;
 #else
-    return NULL;
+    return 0;
 #endif
 }
 
@@ -391,7 +396,7 @@ OSSwitchStack (register u32 newsp)
     mr r3, r5;
     blr;
 #else
-    return NULL;
+    return 0;
 #endif
 }
 
@@ -413,7 +418,7 @@ OSSwitchFiber (register u32 pc, register u32 newsp)
     mr   r1, r5;
     blr;
 #else
-    return NULL;
+    return 0;
 #endif
 }
 
@@ -566,6 +571,8 @@ OSDumpContext (OSContext* context)
 static ASM void
 OSSwitchFPUContext (register __OSException exception, register OSContext* context)
 {
+#pragma unused(exception)
+
 #ifdef __MWERKS__
     nofralloc;
     mfmsr r5;

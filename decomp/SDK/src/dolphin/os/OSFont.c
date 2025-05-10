@@ -228,10 +228,7 @@ Decode (u16* s, u16* d)
             }
 
             // Copy chunk
-            for (i = 0; i < cnt; i++, q++, k++)
-            {
-                d[q] = d[k - 1];
-            }
+            for (i = 0; i < cnt; i++, q++, k++) { d[q] = d[k - 1]; }
         }
 
         // Prepare next mask bit
@@ -263,7 +260,8 @@ OSGetFontEncode (void)
     switch (*(int*)OSPhysicalToCached (0xCC))
     {
         case VI_NTSC:
-            fontEncode = (__VIRegs[VI_DTV_STAT] & 2) ? OS_FONT_ENCODE_SJIS : OS_FONT_ENCODE_ANSI;
+            fontEncode = (__VIRegs[VI_DTV_STAT] & 2) ? (u16)OS_FONT_ENCODE_SJIS
+                                                     : (u16)OS_FONT_ENCODE_ANSI;
             break;
 
         case VI_PAL:
@@ -287,10 +285,7 @@ ReadROM (void* buf, int length, int offset)
         len = (length <= 0x100) ? length : 0x100;
         length -= len;
 
-        while (!__OSReadROM (buf, len, offset))
-        {
-            ;
-        }
+        while (!__OSReadROM (buf, len, offset)) { ; }
 
         offset += len;
         (u8*)buf += len;
@@ -362,7 +357,7 @@ OSGetFontTexel (char* string, void* image, s32 pos, long stride, long* width)
         if ((((code >= 0x80) && (code <= 0x9F)) || ((code >= 0xE0) && (code <= 0xFF))) &&
             ((s8)*string != 0U))
         {
-            code = (code << 8) | (*string++); // Shift-JIS encoded byte
+            code = (u16)((code << 8) | (*string++)); // Shift-JIS encoded byte
         }
     }
     colorIndex = &FontData->c0;
@@ -398,8 +393,8 @@ OSGetFontTexel (char* string, void* image, s32 pos, long stride, long* width)
 
             offsetDst = (pos + x) % 2;
 
-            *dst |=
-                colorIndex[*src >> (6 - (offsetSrc * 2)) & 3] & ((offsetDst != 0) ? 0x0F : 0xF0);
+            *dst |= colorIndex[*src >> (6 - (offsetSrc * 2)) & 3] &
+                    ((offsetDst != 0) ? 0x0F : 0xF0);
         }
     }
     *width = WidthTable[fontCode];
@@ -418,9 +413,9 @@ ExpandFontSheet (u8* src, u8* dst)
         for (i = (s32)(FontData->sheetFullSize) / 2 - 1; i >= 0; i--)
         {
             dst[i * 2 + 0] =
-                colorIndex[src[i] >> 6 & 3] & 0xF0 | colorIndex[src[i] >> 4 & 3] & 0x0F;
+                (u8)(colorIndex[src[i] >> 6 & 3] & 0xF0 | colorIndex[src[i] >> 4 & 3] & 0x0F);
             dst[i * 2 + 1] =
-                colorIndex[src[i] >> 2 & 3] & 0xF0 | colorIndex[src[i] >> 0 & 3] & 0x0F;
+                (u8)(colorIndex[src[i] >> 2 & 3] & 0xF0 | colorIndex[src[i] >> 0 & 3] & 0x0F);
         }
     }
     else if (FontData->sheetFormat == GX_TF_IA4)
@@ -489,7 +484,7 @@ OSGetFontTexture (char* string, void** image, s32* x, long* y, long* width)
         if ((((code >= 0x80) && (code <= 0x9F)) || ((code >= 0xE0) && (code <= 0xFF))) &&
             ((s8)*string != 0U))
         {
-            code = (code << 8) | (*string++); // Shift-JIS encoded byte
+            code = (u8)((code << 8) | (*string++));  // Shift-JIS encoded byte
         }
     }
 
@@ -529,7 +524,7 @@ OSGetFontWidth (char* string, s32* width)
         if ((((code >= 0x80) && (code <= 0x9F)) || ((code >= 0xE0) && (code <= 0xFF))) &&
             ((s8)*string != 0U))
         {
-            code = (code << 8) | (*string++); // Shift-JIS encoded byte
+            code = (u8)((code << 8) | (*string++));  // Shift-JIS encoded byte
         }
     }
     *width = WidthTable[GetFontCode (code)];

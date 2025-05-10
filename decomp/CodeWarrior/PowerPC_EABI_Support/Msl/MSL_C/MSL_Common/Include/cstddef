@@ -1,0 +1,56 @@
+/*  Metrowerks Standard Library  */
+
+/*  $Date: 1999/03/09 23:03:24 $ 
+ *  $Revision: 1.9 $ 
+ *  $NoKeywords: $ 
+ *
+ *		Copyright 1995-1999 Metrowerks, Inc.
+ *		All rights reserved.
+ */
+
+/*
+ *	cstddef         hh  971206  filename usded to be stddef.h
+ */
+ 
+#ifndef __cstddef__
+#define __cstddef__
+
+#include <ansi_parms.h>
+
+#ifndef RC_INVOKED   /* hh 971230 */
+
+#ifdef __cplusplus        /* hh  971206 */
+	#ifdef _MSL_USING_NAMESPACE
+		namespace std {
+	#endif
+	extern "C" {
+#endif
+
+typedef long	ptrdiff_t;
+
+
+#ifdef __cplusplus       /* hh  971206 */
+	}
+	#ifdef _MSL_USING_NAMESPACE
+		}
+	#endif
+#endif
+
+#endif /* RC_INVOKED */
+
+#include <size_t.h>
+#include <wchar_t.h>		/* 990309 vss */
+#include <null.h>
+/* hh 980727 */
+#define offsetof(type, member)	((__std(size_t)) &(((type *) 0)->member))
+
+#endif /* __cstddef__ */
+/*     Change record
+ * hh  971206 Changed filename from stddef.h to cstddef and added namespace support.
+ * hh 971230 added RC_INVOKED wrapper
+ * hh 980120 moved wchart_ typedef from wchar_t.h 
+ * hh 980727 Added __std() into the offsetof definition
+ * hh 990121 Fixed __std
+ * mm 990217 Moved definition of wchar_t to wchar_t.h
+ * vss 990309 wchar_t still has to be defined in stddef.h, however	
+*/

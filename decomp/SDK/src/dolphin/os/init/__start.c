@@ -1,11 +1,10 @@
 #include <dolphin/db.h>
 #include <dolphin/os.h>
 
-// internal header
-#include "OSPrivate.h"
+#include <DolphinTrkInit.h>
+#include <string.h>
 
-// Include TrkInit
-#include "DolphinTrkInit.h"
+#include "OSPrivate.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -47,6 +46,15 @@ SEC_INIT extern void __flush_cache (void* address, u32 size);
 
 void __init_registers (void);
 void __init_data (void);
+
+#ifndef __MWERKS__
+
+void
+mtk_stub ()
+{
+    InitMetroTRK();
+}
+#endif
 
 SEC_INIT WEAKFUNC asm void
 __start (void)

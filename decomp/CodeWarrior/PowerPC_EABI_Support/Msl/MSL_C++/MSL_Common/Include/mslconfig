@@ -1,0 +1,177 @@
+/*  Metrowerks Standard Library  */
+
+/*  $Date: 1999/12/09 17:59:44 $ 
+ *  $Revision: 1.20.4.1 $ 
+ *  $NoKeywords: $ 
+ *
+ *		Portions Copyright 1995-1999 Metrowerks, Inc.
+ *		All rights reserved.
+ */
+
+/**
+ **  mslconfig
+ **/
+
+#ifndef _MSLCONFIG
+#define _MSLCONFIG
+
+// define _MSL_USING_MSL_C if using MSL for the C lib
+#ifndef _MSL_NO_MSL_C
+	#define _MSL_USING_MSL_C
+#endif
+
+#ifdef _MSL_USING_MSL_C
+	#include <mslGlobals.h>
+#endif
+
+#ifdef __MWERKS__
+	#define __MSL_CPP__ 0x5104   //  MSL C++ version identifier
+
+//	_MSL_USING_NAMESPACE refers to MSL C in namespace std
+	#ifndef _MSL_USING_NAMESPACE
+		#define _MSL_NO_CPP_NAMESPACE
+		#define _STD
+		#define _CSTD
+	#else
+		#define _STD ::std
+		#ifdef _MSL_USING_MSL_C
+			#define _CSTD ::std
+		#else
+			#define _CSTD
+		#endif
+	#endif
+
+	#if !__option(exceptions)
+		#define _MSL_NO_EXCEPTIONS
+	#endif
+	#if !__option(bool)
+		#define _MSL_NO_BOOL
+	#else
+		#ifndef TYPE_BOOL
+			#define TYPE_BOOL 1
+		#endif
+	#endif
+	#if !__option(wchar_type)
+		#define _MSL_NO_WCHART
+	#endif
+
+	#ifndef _MSL_USING_MSL_C
+		#define __MSL_LONGLONG_SUPPORT__
+//		#define _MSL_CX_LIMITED_RANGE
+	#endif
+
+	#if __option(ARM_conform)
+		#define _MSL_NO_MEMBER_TEMPLATE
+	#endif
+	#if __dest_os == __win32_os
+		#define NOMINMAX
+	#endif
+	#define _MSL_NO_MESSAGE_FACET
+	#if _MWMT
+		#define _MSL_MULTITHREAD
+	#endif
+
+//	#define _MSL_NO_REFCOUNT_STRING
+
+	// _Inhibit_Container_Optimization, if uncommented will disable pointer
+	// specializations in the containers.  This may make debugging easier.
+//	#define _Inhibit_Container_Optimization
+
+	// _Inhibit_Optimize_RB_bit is a space optimization that compacts the red/black
+	// flag with the parent pointer in each node.  By uncommenting this
+	// define, the optimization is turned off, and the red/black flag will
+	// be stored as an enum in each node.
+//	#define _Inhibit_Optimize_RB_bit
+
+	// _MSL_USE_AUTO_PTR_96 will disable the standard auto_ptr and enable the
+	// version of auto_ptr that appeared in the Dec. '96 CD2.
+//	#define _MSL_USE_AUTO_PTR_96
+
+//	#define _MSL_NO_THROW_SPECS
+//	#define _MSL_NO_EXPLICIT_FUNC_TEMPLATE_ARG
+//	#define _MSL_NO_PARTIAL_SPECIALIZATION
+//	#define _MSL_MUST_INLINE_MEMBER_TEMPLATE
+//	#define _MSL_NO_IO
+//	#define _No_Floating_Point
+#endif
+
+#ifdef __GNUC__
+
+	#define _MSL_NO_CPP_NAMESPACE
+	#define __QNXC__
+	#define _MSL_NO_EXPLICIT_FUNC_TEMPLATE_ARG
+	#define _MSL_CX_LIMITED_RANGE
+	#define _MSL_NO_MEMBER_TEMPLATE
+	#ifndef _MSL_NO_CPP_NAMESPACE
+		#define _STD ::std
+	#else
+		#define _STD
+	#endif
+
+#endif
+
+//-----------------------------------------------------------------
+
+#ifdef _MSL_NO_BOOL
+	#ifndef bool
+		typedef char bool;
+	#endif
+	#ifndef true
+		#define false char(0)
+		#define true char(1)
+	#endif
+#endif
+
+#ifdef _MSL_NO_THROW_SPECS
+	#define _MSL_THROW
+#else
+	#define _MSL_THROW throw()
+#endif
+
+#ifndef _MSL_NO_MEMBER_TEMPLATE
+	#define _MSL_REBIND(type) typename Allocator::rebind<type>::other
+#else
+	#define _MSL_REBIND(type) allocator<type>
+#endif
+
+#ifdef _MSL_NO_EXCEPTIONS
+
+	#ifndef _MSL_NO_CPP_NAMESPACE
+		namespace std {
+	#endif
+
+	void __msl_error(const char*);
+
+	#ifndef _MSL_NO_CPP_NAMESPACE
+		} // namespace std
+	#endif
+
+	// If you don't want MSL C++ to throw an exception, code your
+	// error handling code here as an inline method named _STD::__msl_error
+	// Two examples are below:
+
+	// Example 1 - bail
+	#include <cstdio>
+	#include <cstdlib>
+
+	inline
+	void
+	_STD::__msl_error(const char* str)
+	{
+		fprintf(stderr, str);
+		abort();
+	}
+
+/*
+	// Example 2 - ignore
+	inline
+	void
+	_STD::__msl_error(const char*)
+	{
+	}
+*/
+#endif
+
+#endif // _MSLCONFIG
+
+// hh 990120 Created

@@ -1,6 +1,5 @@
-#include <dolphin/os.h>
-
 #include <dolphin.h>
+#include <dolphin/os.h>
 #define CHAN_NONE                 -1
 
 #define SI_MAX_CHAN               4
@@ -14,10 +13,10 @@
 #define SI_COMCSR_RDSTINT_MASK    (1 << 28)
 #define SI_COMCSR_RDSTINTMSK_MASK (1 << 27)
 // 4 bits of padding
-#define SI_COMCSR_OUTLNGTH_MASK                                                                    \
+#define SI_COMCSR_OUTLNGTH_MASK                                                                \
     (1 << 22) | (1 << 21) | (1 << 20) | (1 << 19) | (1 << 18) | (1 << 17) | (1 << 16)
 // 1 bit of padding
-#define SI_COMCSR_INLNGTH_MASK                                                                     \
+#define SI_COMCSR_INLNGTH_MASK                                                                 \
     (1 << 14) | (1 << 13) | (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8)
 // 5 bits of padding
 #define SI_COMCSR_CHANNEL_MASK (1 << 2) | (1 << 1)
@@ -82,25 +81,19 @@ CompleteTransfer ()
     u32  temp;
 
     sr = __SIRegs[SI_STATUS_IDX];
-    __SIRegs[SI_COMCSR_IDX] = SI_COMCSR_TCINT_MASK;
+    __SIRegs[SI_COMCSR_IDX] = (u32)SI_COMCSR_TCINT_MASK;
 
     if (Si.chan != -1)
     {
         input = Si.input;
         rLen = (Si.inputBytes / 4);
-        for (i = 0; i < rLen; i++)
-        {
-            *((u32*)input)++ = __SIRegs[i + 0x20];
-        }
+        for (i = 0; i < rLen; i++) { *((u32*)input)++ = __SIRegs[i + 0x20]; }
 
         rLen = Si.inputBytes & 3;
         if (rLen != 0)
         {
             temp = __SIRegs[i + 32];
-            for (i = 0; i < rLen; i++)
-            {
-                *((u8*)input)++ = temp >> ((3 - i) * 8);
-            }
+            for (i = 0; i < rLen; i++) { *((u8*)input)++ = (u8)(temp >> ((3 - i) * 8)); }
         }
         sr >>= ((3 - Si.chan) * 8);
         sr &= 0xF;
@@ -145,8 +138,11 @@ SITransferNext (s32 chan)
 static void
 SIIntrruptHandler (s16 unused, OSContext* context)
 {
-    s32  chan;
-    u32  sr;
+#pragma unused(unused)
+
+    s32 chan;
+    u32 sr;
+
     void (*callback) (s32, u32, OSContext*);
 
     ASSERTLINE (0xE2, Si.chan != CHAN_NONE);
@@ -170,7 +166,7 @@ SIInit ()
     do {
     }
     while (__SIRegs[SI_COMCSR_IDX] & SI_COMCSR_TSTART_MASK);
-    __SIRegs[SI_COMCSR_IDX] = SI_COMCSR_TCINT_MASK;
+    __SIRegs[SI_COMCSR_IDX] = (u32)SI_COMCSR_TCINT_MASK;
     __OSSetInterruptHandler (0x14, SIIntrruptHandler);
     __OSUnmaskInterrupts (0x800);
 }
@@ -224,7 +220,8 @@ __SITransfer (s32   chan,
         return 0;
     }
     ASSERTLINE (0x138,
-                (__SIRegs[SI_COMCSR_IDX] & (SI_COMCSR_TSTART_MASK | SI_COMCSR_TCINT_MASK)) == 0);
+                (__SIRegs[SI_COMCSR_IDX] & (SI_COMCSR_TSTART_MASK | SI_COMCSR_TCINT_MASK)) ==
+                    0);
     sr = __SIRegs[SI_STATUS_IDX];
     sr &= (0x0F000000 >> (chan * 8));
     __SIRegs[SI_STATUS_IDX] = sr;
@@ -235,10 +232,7 @@ __SITransfer (s32   chan,
     Si.input = input;
 
     rLen = ROUND (outputBytes, 4) / 4;
-    for (i = 0; i < rLen; i++)
-    {
-        __SIRegs[i + 0x20] = ((u32*)output)[i];
-    }
+    for (i = 0; i < rLen; i++) { __SIRegs[i + 0x20] = ((u32*)output)[i]; }
 
     comcsr.val = 0;
     comcsr.f.tcint = 1;
@@ -293,7 +287,7 @@ SIGetCommand (s32 chan)
 void
 SITransferCommands ()
 {
-    __SIRegs[SI_STATUS_IDX] = SI_COMCSR_TCINT_MASK;
+    __SIRegs[SI_STATUS_IDX] = (u32)SI_COMCSR_TCINT_MASK;
 }
 
 u32
@@ -376,6 +370,8 @@ SIGetResponse (s32 chan, void* data)
 static void
 AlarmHandler (struct OSAlarm* alarm, OSContext* context)
 {
+#pragma unused(context)
+
     s32              chan;
     struct SIPacket* packet;
 

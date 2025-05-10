@@ -1,127 +1,127 @@
 ##############################################################################
 #
-#MBX860 Initialization Routine
+# MBX860 Initialization Routine 
 #
-#Function : adsinit
-#The MBX board will be initialized as below
+# Function: adsinit
+#         The MBX board will be initialized as below
 #
-#Input Registers:
-#None
-#Output Registers:
-#R8 contains the content of DC_CST before entering
-#usr_init()
-#R3, R4, R5 and R6 will be destroyed
-#R2 must be preserved
+# Input Registers:
+#       None
+# Output Registers:
+#       R8 contains the content of DC_CST before entering
+#          usr_init()
+#       R3, R4, R5 and R6 will be destroyed
+#	R2 must be preserved
 #
-#Core registers:
-#MSR and SRR1 = 0x00001002
-#ICTRL = 6
-#DER = 0x0->Allow all exceptions to go to target
-#ICR = 0
-#IMMR = 0xFF000000
+# Core registers:
+#  MSR and SRR1 = 0x00001002
+#  ICTRL = 6
+#  DER = 0x0             -> Allow all exceptions to go to target
+#  ICR = 0
+#  IMMR = 0xFF000000
+#  
+# SIU registers:
+#  SIUMCR |= 0x00032640  -> FRC=1|DLK=1|DPC=1|MLRC=1|GB5E=1
+#  SYPCR = 0xffffff88    -> SWTC=ffff|BMT=08|BME=1|SWF=0|SWE=0|SWRI=0|SWP=0
+#  TBSCR = 0x00c2        -> REFA=1|REFB=1|TBF=1|TBE=0
+#  RTCSC = 0x01c2
+#  PISCR = 0x0082
+#  
+# UPM and Memory Controllers are set only after a hard reset.
+# Memory Controller:
+#      OR0 = 0xffe00954  -> AM=FFE0|ARM=0|CSNT=0|ACS=0|BI=0|SCY=5|SETA=0|
+#                           TRLX=1
+#      OR1 = 0xffff8110
+#      OR2 = 0xfe000800  -> allows 32MB DRAM space
+#      BR0 = 0xffe00001  -> map the Flash at 0xffe00000-0xffffffff
+#      BR1 = 0xF0000001
+#      BR2 = 0x00000081
+#      MPTPR = 0x0800
+#      MAMR = 0xc0a21114
+#      
+#  
+# The initial ADS memory map is as following:
+#  Chip Select 2 - DRAM         - 0x00000000 - 0x003fffff
+#  Chip Select 0 - Flash Memory - 0xffe00000 - 0xffffffff
+#  Chip Select 1 - Board Control and Status register
+#                               - 0xf0000000 - 0xf0003fff
+#  Internal I/O space (programmed in IMMR register)
+#                               - 0xff000000
 #
-#SIU registers:
-#SIUMCR |= 0x00032640->FRC = 1 | DLK = 1 | DPC = 1 | MLRC = 1 | GB5E = 1
-#SYPCR = 0xffffff88->SWTC = ffff | BMT = 08 | BME = 1 | SWF = 0 | SWE = 0 | SWRI = 0 | SWP = 0
-#TBSCR = 0x00c2->REFA = 1 | REFB = 1 | TBF = 1 | TBE = 0
-#RTCSC = 0x01c2
-#PISCR = 0x0082
 #
-#UPM and Memory Controllers are set only after a hard reset.
-#Memory Controller:
-#OR0 = 0xffe00954->AM = FFE0 | ARM = 0 | CSNT = 0 | ACS = 0 | BI = 0 | SCY = 5 | SETA = 0 |
-#TRLX = 1
-#OR1 = 0xffff8110
-#OR2 = 0xfe000800->allows 32MB DRAM space
-#BR0 = 0xffe00001->map the Flash at 0xffe00000 - 0xffffffff
-#BR1 = 0xF0000001
-#BR2 = 0x00000081
-#MPTPR = 0x0800
-#MAMR = 0xc0a21114
+#  History:
 #
+#  7/17/95   lvn      Initial write-up
 #
-#The initial ADS memory map is as following:
-#Chip Select 2 - DRAM - 0x00000000 - 0x003fffff
-#Chip Select 0 - Flash             Memory - 0xffe00000 - 0xffffffff
-#Chip Select 1 - Board Control and Status register
-#- 0xf0000000 - 0xf0003fff
-#Internal I / O space(programmed in IMMR register)
-#- 0xff000000
+#  9/15/95   lvn      Set up PLL multiplier to get 25MHZ CPU
+#                     clock from 32.768KHZ
+#                     Enable RS232 buffer on ADS board to allow
+#                     Tx and Rx signals to appear on RS232 port.
 #
+#  10/4/95   lvn      Changed default to 16MHZ due to the UPM
+#                     value calculation was based on 16MHZ clock.
 #
-#History:
+#  10/5/95   lvn      Changed default clock to 20MHZ.
+#                     Mapped the Flash at 0xfff00000
 #
-# 7 / 17 / 95 lvn Initial write - up
+#  10/7/95   lvn      Adding both I and D cache support
 #
-# 9 / 15 / 95 lvn Set up PLL multiplier to get 25MHZ CPU
-#clock from 32.768KHZ
-#Enable RS232 buffer on ADS board     to allow
-#Tx and Rx signals to appear on RS232 port.
+#  10/10/95  lvn      Updated MAMR and UPM parameters to match with
+#                     values in mpc8bug 0.1 for 70ns DRAM
 #
-# 10 / 4 / 95 lvn Changed default to 16MHZ due to the UPM
-#value calculation was based on 16MHZ clock.
+#  10/11/95  lvn      Reordered code to initialize UPM before base
+#                     register.
 #
-# 10 / 5 / 95 lvn Changed default clock to 20MHZ.
-#Mapped the Flash at 0xfff00000
+#  10/16/95  lvn      Changed map register to match with mpc8bug so we
+#                     can run the code in Flash under MPC8bug.
 #
-# 10 / 7 / 95 lvn Adding both I and D cache support
+#  10/19/95  lvn      Set system clock to 40MHZ, tested OK, set to 48MHZ
+#                     tested fine, drop down to 24MHZ since we want it
+#                     to work with 2 shipped parts, 25MHZ and 40MHZ.
 #
-# 10 / 10 / 95 lvn Updated MAMR and UPM parameters to match with
-#values in mpc8bug 0.1 for 70ns DRAM
+#  10/25/95  lvn      Expanded the range of DRAM to 32MB to allow bigger
+#                     SIMM in the future.
+#                     Corrected the refresh problem when loading the
+#                     a wrong value into MPTPR register. Refresh is now
+#                     64us per burst refresh (4 beats) or 16us per row.
 #
-# 10 / 11 / 95 lvn Reordered code to initialize UPM before base
-#register.
+#  11/8/95   lvn      Corrected problem with Tx and Rx buffer descritors
+#                     that were overlaped since the last change.
 #
-# 10 / 16 / 95 lvn Changed map register to match with mpc8bug so we
-#can run the code in Flash under MPC8bug.
+#  1/4/96    lvn      Removed unneccessary register initialization for
+#                     SMC1 per Satoshi IIda's suggestion.
 #
-# 10 / 19 / 95 lvn Set system clock to 40MHZ, tested OK, set to 48MHZ
-#tested fine, drop down to 24MHZ since we want it
-#to work with 2 shipped parts, 25MHZ and 40MHZ.
+#  1/15/96   lvn      Reordered the initialization sequence to fix a 
+#                     hang problem that occured on numbers of Rev 1 chips and
+#                     Rev .2 chips as well. The UPM initialization must be
+#                     done before Bank Registers initialization. The fix is
+#                     in monitor version 0.5.
 #
-# 10 / 25 / 95 lvn Expanded the range of DRAM to 32MB to allow bigger
-#SIMM in the                        future.
-#Corrected the refresh problem when loading the
-#a wrong value into MPTPR register.Refresh is now
-# 64us per burst refresh(4 beats) or 16us per row.
+#  1/22/95   lvn      Supporting 32.768KHZ crystal by configuring PLL divider
+#                     automatically to obtain 24MHZ system clock based on
+#                     the RTSEL bit in SCCR register. If RTSEL clear, the
+#                     crystal is used. Otherwise, it's External Oscillator.
 #
-# 11 / 8 / 95 lvn Corrected problem with Tx and Rx buffer descritors
-#that were overlaped since the last change.
+#  4/18/96   lvn      Changed SMC1 baudrate to 115.2KBaud to work with
+#                     high data rate supported in SingleStep 7.0
 #
-# 1 / 4 / 96 lvn Removed unneccessary register initialization for
-#SMC1 per Satoshi IIda's suggestion.
+#  4/28/96   lvn      Added soft-reset to support real target reset
 #
-# 1 / 15 / 96 lvn Reordered the initialization sequence to fix a
-#hang problem that occured on numbers of Rev 1 chips and
-#Rev.2 chips as well.The UPM initialization must be
-#done before Bank Registers initialization.The fix is
-#in monitor                                    version 0.5.
-#
-# 1 / 22 / 95 lvn Supporting 32.768KHZ crystal by configuring PLL divider
-#automatically to obtain 24MHZ system clock based on
-#the RTSEL bit in SCCR register.If RTSEL clear, the
-#crystal is                              used.Otherwise, it's External Oscillator.
-#
-# 4 / 18 / 96 lvn Changed SMC1 baudrate to 115.2KBaud to work with
-#high data rate supported in SingleStep 7.0
-#
-# 4 / 28 / 96 lvn Added soft - reset to support real target reset
-#
-# 8 / 21 / 97 Ferry Added support MBX860 - 003 initialization.
+#  8/21/97   Ferry	  Added support MBX860-003 initialization.
 #
 ##############################################################################
 #
-#Register Offset Definitions
+# Register Offset Definitions
 #
-#All these registers are offset from the pointer pointed to
-#by the IMMR in                                  MPC821.
+# All these registers are offset from the pointer pointed to
+# by the IMMR in MPC821.
 #
 ##############################################################################
 
-#TARGET_SYSTEM_FREQUENCY.equ 50 #Target System Frequency
-#__MOT_MBX_A__.equ 1
-#__MOT_MBX__.equ 0
-#__MOT_ADS__.equ 0
+#TARGET_SYSTEM_FREQUENCY	.equ	50			# Target System Frequency
+#__MOT_MBX_A__				.equ	1
+#__MOT_MBX__				.equ	0
+#__MOT_ADS__				.equ	0
 SDCR       				.equ    0x0030      # SDMA Configuration Register
 CPCR       				.equ    0x09c0      # CPM Command Reg.
 CICR       				.equ    0x0940      # CP Interrupt Configuration Register
@@ -161,9 +161,9 @@ Txbd       				.equ    0x2808      # Tx Buffer Descriptor Offset
 Rxbuf      				.equ    0x2810      # offset 810 from Dual Port Ram
 Txbuf      				.equ    0x2820		# offset 820 from Dual Port Ram
 
-#On - Chip Core Registers
-#LR.equ 8 #Link register
-#CTR.equ 9 #Counter register 
+# On-Chip Core Registers
+# LR       				.equ      8        	# Link register 
+# CTR      				.equ      9        	# Counter register 
 ICR        				.equ    148         # Interrupt Cause Register
 ICTRL      				.equ    158         # Instruction Control Register
 DER        				.equ    149         # Debug Enable Register
@@ -178,7 +178,7 @@ DC_CST     				.equ    568         # DCache Control Status Register
 DC_ADR     				.equ    569         # DCache Address Register
 DC_DAT     				.equ    570         # DCache Data Register
 
-#On - Chip Registers
+# On-Chip Registers
 SIUMCR     				.equ    0x000		# SIU Module configuration
 SYPCR      				.equ    0x004   	# SIU System Protection Control
 SIEL					.equ	0x018		# SIU Interrupt Edge Level Mask Register
@@ -205,22 +205,22 @@ MAMR       				.equ    0x170   	# Machine A Mode Register
 MBMR       				.equ    0x174   	# Machine B Mode Register
 MPTPR      				.equ    0x17A   	# Memory Periodic Timer Prescaler
 MDR        				.equ    0x17C   	# Memory Data
-TBSCR      				.equ    0x200   	# Time Base Status and Control
-#Register
-RTCSC      				.equ    0x220   	# Real Timer Clock Status and
-#Control
+TBSCR      				.equ    0x200   	# Time Base Status and Control 
+											#	Register
+RTCSC      				.equ    0x220   	# Real Timer Clock Status and 
+											#	Control
 PISCR      				.equ    0x240   	# PIT Status and Control
 SCCR       				.equ    0x280   	# System Clock Control Register
-PLPRCR     				.equ    0x284   	# PLL, Low power & Reset Control
-#Register
-RTCSCK					.equ	0x320		# Real-Time Clock Status and
-#Control Register Key
+PLPRCR     				.equ    0x284   	# PLL, Low power & Reset Control 
+											#	Register
+RTCSCK					.equ	0x320		# Real-Time Clock Status and 
+											# 	Control Register Key
 RTCK					.equ	0x324		# Real-Time Clock Register Key
 RTCECK					.equ	0x328		# Real-Time Alarm Seconds Key
 RTCALK					.equ	0x32C		# Real-Time Alarm Register Key
-
-#Instruction and Data                              Cache definition
-#Note : must use with lis instruction to load into bit 0 - 15
+		
+# Instruction and Data Cache definition
+# Note: must use with lis instruction to load into bit 0-15
 CacheUnlockAllCmd  		.equ   0x0A00   	# Cache Unlock_All command
 CacheDisableCmd    		.equ   0x0400   	# Cache Disable command
 CacheInvAllCmd     		.equ   0x0C00   	# Cache Invalidate_All command
@@ -230,7 +230,7 @@ CacheEnableBit     		.equ   0x8000   	# Cache Enable bit in I/DC_CST
 
 ##############################################################################
 #
-#
+# 
 #
 ##############################################################################
     	.section   .init,4,1,6
@@ -246,14 +246,14 @@ usr_init:
 
 ##############################################################################
 #
-#PowerPC Configuration / Initialization
-#-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+# PowerPC Configuration / Initialization 
+# --------------------------------------
 #
 ##############################################################################
 
 ##############################################################################
 #
-#Initialize the Internal Memory Map Register(IMMR)
+# Initialize the Internal Memory Map Register ( IMMR )
 #
 ##############################################################################
 
@@ -271,8 +271,8 @@ usr_init:
 
 ##############################################################################
 #
-#Disable Data Cache before accessing     any registers
-#Save the status of DC_CST in R8 for the flush routine
+# Disable Data Cache before accessing any registers
+# Save the status of DC_CST in R8 for the flush routine
 #
 ##############################################################################
 
@@ -284,13 +284,13 @@ usr_init:
 ##############################################################################
 #
 #
-#UPM RAM Array Initialization
-#-- -- -- -- -- -- -- -- -- -- -- -- -- --
+#	UPM RAM Array Initialization
+#   ----------------------------
 #
-#UPM programming by writing to                           its 64 RAM locations
-#Note that initialization of UPM must be done before the Bank Register
-#initialization.Otherwise, system may hang when writing to Bank
-#Registers in certain cases.
+# 	UPM programming by writing to its 64 RAM locations
+# 	Note that initialization of UPM must be done before the Bank Register
+# 	initialization. Otherwise, system may hang when writing to Bank
+# 	Registers in certain cases.
 #
 ##############################################################################
 
@@ -333,8 +333,8 @@ UMPInitEnd:
 	ori        r3,r3,0x1114
 	stw        r3,MAMR(r4)
 	
-	;
-Note : the MBMR is only used on the FADS board, but initializing; it for the ADS board as well shouldn't hurt anything.
+	; Note: the MBMR is only used on the FADS board, but initializing
+	; it for the ADS board as well shouldn't hurt anything.
 	lis        r3,0x6080     # MBMR = 0x60802114 (for 24MHz)
 	ori        r3,r3,0x2114
 	stw	       r3,MBMR(r4)
@@ -351,7 +351,7 @@ Note : the MBMR is only used on the FADS board, but initializing; it for the ADS
 
 ##############################################################################
 #
-#Initialize the System Protection Control Register(SYPCR)
+# Initialize the System Protection Control Register (SYPCR)
 #
 ##############################################################################
 
@@ -362,41 +362,41 @@ Note : the MBMR is only used on the FADS board, but initializing; it for the ADS
 ##############################################################################
 #
 #
-#Memory Controller Initialization
-#-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+#	Memory Controller Initialization
+#   --------------------------------
 #
 ##############################################################################
 
 BaseInit:
 ##############################################################################
 #
-#(Table 15 - 14, MPC821):
+# (Table 15-14, MPC821):
 #
-#BR0 = 0xFFE00001:
-#Base addr[0 - 16] 11111111111000000 = 0xFFE00000
-#Address type[17 - 19] 00
-#Port size[20 - 21] 00 = 32 bits port size
-#Parity enable[22] 0 = parity checking disabled
-#Write Protect[23] 0 = r / w
-#Machine select[24 - 25] 00 = G.P.C.M.
-#Reserved[26 - 30]
-#Valid Bit[31] 1 = This bank is valid.
+# BR0 = 0xFFE00001:
+#	Base addr [0-16]	11111111111000000 = 0xFFE00000
+#	Address type [17-19]	00
+#	Port size [20-21]	00 = 32 bits port size
+#	Parity enable [22]	0 = parity checking disabled
+#	Write Protect [23]	0 = r/w
+#	Machine select [24-25]	00 = G.P.C.M.
+#	Reserved [26-30]
+#	Valid Bit [31]		1 = This bank is valid.
 #	
 ##############################################################################
 
 ##############################################################################
 #
-#OR0 = 0xFFE00954:
-#Address Mask[0 - 16] 11111111111000000
-#Addr.Type Mask[17 - 19] 000
-#CS neg.time[20] 1 = CS ~/ WE ~negated 1 / 4 clk early; see docs.
-#Addr to CS Setup[21 - 22] 00 = CS ~is output at same time as addr lines
-#Burst Inhibit[23] 1 = Banks does not support burst accesses.
-#Cycle length[24 - 27] 0101 = 5 clock cycle wait states
-#Ext.Trans ACK[28] 0 = TA ~is generated internally by M.C.
-#Timing Relaxed[29] 1 = relaxed timing generated by M.C.
-#Extended Hold Time[30] 0 = normal timing generated by M.C.
-#Reservd[31] 0
+# OR0 = 0xFFE00954:
+#	Address Mask [0-16]	11111111111000000
+#	Addr. Type Mask [17-19]	000
+#	CS neg. time [20]	1 = CS~/WE~ negated 1/4 clk early; see docs.
+#	Addr to CS Setup [21-22] 00 = CS~ is output at same time as addr lines
+#	Burst Inhibit [23]	1 = Banks does not support burst accesses.
+#	Cycle length [24-27]	0101 = 5 clock cycle wait states
+#	Ext. Trans ACK [28]	0 = TA~ is generated internally by M.C.
+#	Timing Relaxed [29]	1 = relaxed timing generated by M.C.
+#	Extended Hold Time [30]	0 = normal timing generated by M.C.
+#	Reservd [31]		0
 #	
 ##############################################################################
 
@@ -420,7 +420,7 @@ BaseInit:
 
 ##############################################################################
 #
-#Initialize BR1 and OR1
+#	Initialize BR1 and OR1
 #
 ##############################################################################
 
@@ -444,33 +444,33 @@ BaseInit:
 
 ##############################################################################
 #
-#(Table 15 - 14, MPC821):
+# (Table 15-14, MPC821):
 #
-#BR2 = 0x00000081:
-#Base addr[0 - 16] 00000000000000000 = 0x00000000
-#Address type[17 - 19] 00
-#Port size[20 - 21] 00 = 32 bits port size
-#Parity enable[22] 0 = parity checking disabled
-#Write Protect[23] 0 = r / w
-#Machine select[24 - 25] 10 = U.P.M.A.
-#Reserved[26 - 30] 00000
-#Valid Bit[31] 1 = This bank is valid.
+# BR2 = 0x00000081:
+#	Base addr [0-16]	00000000000000000 = 0x00000000
+#	Address type [17-19]	00
+#	Port size [20-21]	00 = 32 bits port size
+#	Parity enable [22]	0 = parity checking disabled
+#	Write Protect [23]	0 = r/w
+#	Machine select [24-25]	10 = U.P.M.A.
+#	Reserved [26-30]        00000
+#	Valid Bit [31]		1 = This bank is valid.
 #	
 ##############################################################################
 
 ##############################################################################
 #
-#OR2 = 0xFE000800:
-#Address Mask[0 - 16] 11111110000000000(0 - 32MB)
-#Addr.Type Mask[17 - 19] 000
-#CS neg.time[20] 1 = CS ~/ WE ~negated 1 / 4 clk early; see docs.
-#Addr to CS Setup[21 - 22] 00 = CS ~is output at same time as addr lines
-#Burst Inhibit[23] 0 = Banks support burst accesses.
-#Cycle length[24 - 27] 0000 = 0 clock cycle wait states
-#Ext.Trans ACK[28] 0 = TA ~is generated internally by M.C.
-#Timing Relaxed[29] 0 = Normal timing generated by M.C.
-#Extended Hold Time[30] 0 = Normal timing generated by M.C.
-#Reservd[31] 0
+# OR2 = 0xFE000800:
+#	Address Mask [0-16]	11111110000000000 (0-32MB)
+#	Addr. Type Mask [17-19]	000
+#	CS neg. time [20]	1 = CS~/WE~ negated 1/4 clk early; see docs.
+#	Addr to CS Setup [21-22] 00 = CS~ is output at same time as addr lines
+#	Burst Inhibit [23]	0 = Banks support burst accesses.
+#	Cycle length [24-27]	0000 = 0 clock cycle wait states
+#	Ext. Trans ACK [28]	0 = TA~ is generated internally by M.C.
+#	Timing Relaxed [29]	0 = Normal timing generated by M.C.
+#	Extended Hold Time [30]	0 = Normal timing generated by M.C.
+#	Reservd [31]		0
 #	
 ##############################################################################
 
@@ -494,7 +494,7 @@ BaseInit:
 
 ##############################################################################
 #
-#Initialize BR3 and OR3
+#	Initialize BR3 and OR3
 #
 ##############################################################################
 
@@ -509,13 +509,13 @@ BaseInit:
 
 ##############################################################################
 #
-#Initialize BR4 and OR4
+#	Initialize BR4 and OR4
 #
 ##############################################################################
 
 .if __MOT_ADS__
-	;
-SDRAM is only present on the FADS board, but this shouldn't hurt ; anything on the ADS board.
+	; SDRAM is only present on the FADS board, but this shouldn't hurt
+	; anything on the ADS board.
 	lis        r3,0x0300     # BR4 = 0x030000c1 : SDRAM at 0x03000000
 	ori        r3,r3,0x00c1
 	lis        r5,0xffc0     # OR4 = 0xffc00a00
@@ -535,7 +535,7 @@ SDRAM is only present on the FADS board, but this shouldn't hurt ; anything on t
 
 ##############################################################################
 #
-#Initialize BR5 and OR5
+#	Initialize BR5 and OR5
 #
 ##############################################################################
 
@@ -550,7 +550,7 @@ SDRAM is only present on the FADS board, but this shouldn't hurt ; anything on t
 
 ##############################################################################
 #
-#Initialize BR6 and OR6
+#	Initialize BR6 and OR6
 #
 ##############################################################################
 
@@ -565,7 +565,7 @@ SDRAM is only present on the FADS board, but this shouldn't hurt ; anything on t
 
 ##############################################################################
 #
-#Initialize BR7 and OR7
+#	Initialize BR7 and OR7
 #
 ##############################################################################
 
@@ -580,8 +580,8 @@ SDRAM is only present on the FADS board, but this shouldn't hurt ; anything on t
 
 ##############################################################################
 #
-#Additional initialization required for the SDRAM on the FADS board.
-#See FADS manual                                              section 4.8.1.1
+# Additional initialization required for the SDRAM on the FADS board.
+# See FADS manual section 4.8.1.1
 #
 ##############################################################################
 .if __MOT_ADS__
@@ -606,7 +606,7 @@ SDRAM is only present on the FADS board, but this shouldn't hurt ; anything on t
 
 ##############################################################################
 #
-#Initialize the Debug Enable Registers(DER)
+# Initialize the Debug Enable Registers (DER)
 #
 ##############################################################################
 
@@ -616,17 +616,17 @@ SDRAM is only present on the FADS board, but this shouldn't hurt ; anything on t
 
 ##############################################################################
 #
-#Initialize the Decrement Registers(DEC)
+# Initialize the Decrement Registers (DEC)
 #
 ##############################################################################
 
-#lis r3, 0xFFFF #DEC = 0xFFFFFFFF
-#ori r3, r3, 0xFFFF
-#mtspr DEC, r3        		
+#	lis        r3,0xFFFF    #  DEC = 0xFFFFFFFF
+#	ori        r3,r3,0xFFFF
+#	mtspr      DEC,r3        		
 
 ##############################################################################
 #
-#Initialize the Interupt Cause Register(ICR)
+# Initialize the Interupt Cause Register (ICR)
 #
 ##############################################################################
 
@@ -636,7 +636,7 @@ SDRAM is only present on the FADS board, but this shouldn't hurt ; anything on t
 
 ##############################################################################
 #
-#Initialize the Instruction Control Register(ICTRL)
+# Initialize the Instruction Control Register (ICTRL)
 #
 ##############################################################################
 
@@ -646,27 +646,27 @@ SDRAM is only present on the FADS board, but this shouldn't hurt ; anything on t
 
 ##############################################################################
 #
-#Initialize the Write Lower Timebase Register(TB Write)
+# Initialize the Write Lower Timebase Register (TB Write)
 #
 ##############################################################################
 
-#lis r3, 0x0000 #TB_WRITE = 0x00000000
-#ori r3, r3, 0x0000
-#mtspr TB_WRITE, r3        		
+#	lis        r3,0x0000    #  TB_WRITE = 0x00000000
+#	ori        r3,r3,0x0000
+#	mtspr      TB_WRITE,r3        		
 
 ##############################################################################
 #
-#Initialize the Write Upper Timebase Register(TBU Write)
+# Initialize the Write Upper Timebase Register (TBU Write)
 #
 ##############################################################################
 
-#lis r3, 0x0000 #TB_WRITE = 0x00000000
-#ori r3, r3, 0x0000
-#mtspr TBU_WRITE, r3        		
+#	lis        r3,0x0000    #  TB_WRITE = 0x00000000
+#	ori        r3,r3,0x0000
+#	mtspr      TBU_WRITE,r3        		
 
 ##############################################################################
 #
-#Initialize the Machine State Register(MSR)
+# Initialize the Machine State Register (MSR)
 #
 ##############################################################################
 
@@ -676,7 +676,7 @@ SDRAM is only present on the FADS board, but this shouldn't hurt ; anything on t
 
 ##############################################################################
 #
-#Initialize the Save / Restore Register 1(SRR1)
+# Initialize the Save/Restore Register 1 (SRR1)
 #
 ##############################################################################
 
@@ -687,15 +687,15 @@ SDRAM is only present on the FADS board, but this shouldn't hurt ; anything on t
 
 ##############################################################################
 #
-#Clock and Reset Registers Programming
-#-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
+# Clock and Reset Registers Programming
+# -------------------------------------
 #
 ##############################################################################
 
 .if __MOT_MBX__
 ##############################################################################
 #
-#Set the clock speed to 40MHz and set power mode
+# Set the clock speed to 40MHz and set power mode
 #
 ##############################################################################
 
@@ -707,7 +707,7 @@ SDRAM is only present on the FADS board, but this shouldn't hurt ; anything on t
 
 ##############################################################################
 #
-#Set the clock sources and division factors
+# Set the clock sources and division factors
 #
 ##############################################################################
 
@@ -721,7 +721,7 @@ SDRAM is only present on the FADS board, but this shouldn't hurt ; anything on t
 .if __MOT_MBX_A__
 ##############################################################################
 #
-#Set the clock speed to 50MHz and set power mode
+# Set the clock speed to 50MHz and set power mode
 #
 ##############################################################################
 
@@ -733,7 +733,7 @@ SDRAM is only present on the FADS board, but this shouldn't hurt ; anything on t
 
 ##############################################################################
 #
-#Set the clock sources and division factors
+# Set the clock sources and division factors
 #
 ##############################################################################
 
@@ -747,22 +747,22 @@ SDRAM is only present on the FADS board, but this shouldn't hurt ; anything on t
 
 ##############################################################################
 #
-#Set the ADS board to 25MHz
-#lis r3, 0x2fb0 #multiply factor from 32.768KHZ
-#Set the ADS board to 24MHz
-#lis r3, 0x2dc0 #multiply factor from 32.768KHZ
-#Set the ADS board to 16MHz
-#lis r3, 0x2000 #multiply factor from 32.768KHZ
-#Set the ADS board to 48MHZ from 4MHZ clock at CLK4
-#lis r3, 0x00B0 #multiply factor from 4MHZ at CLK4
-#Set the ADS board to 40MHZ from 4MHZ clock at CLK4
-#lis r3, 0x0090 #multiply factor from 4MHZ at CLK4
-#Set the ADS board to 24MHZ from 4MHZ clock at CLK4
-#lis r3, 0x0060 #multiply factor from 4MHZ at CLK4
-#Set the ADS board to 20MHZ from 4MHZ clock at CLK4
-#lis r3, 0x0040 #multiply factor from 4MHZ at CLK4
-#Set the ADS board to 16MHz from 4MHZ clock at CLK4
-#lis r3, 0x0030 #multiply factor from 4MHZ at CLK4
+# Set the ADS board to 25MHz
+#        lis        r3,0x2fb0     # multiply factor from 32.768KHZ
+# Set the ADS board to 24MHz
+#         lis       r3,0x2dc0     # multiply factor from 32.768KHZ
+# Set the ADS board to 16MHz
+#        lis        r3,0x2000     # multiply factor from 32.768KHZ
+# Set the ADS board to 48MHZ from 4MHZ clock at CLK4
+#        lis        r3,0x00B0     # multiply factor from 4MHZ at CLK4
+# Set the ADS board to 40MHZ from 4MHZ clock at CLK4
+#        lis        r3,0x0090     # multiply factor from 4MHZ at CLK4
+# Set the ADS board to 24MHZ from 4MHZ clock at CLK4
+#        lis        r3,0x0060     # multiply factor from 4MHZ at CLK4
+# Set the ADS board to 20MHZ from 4MHZ clock at CLK4
+#        lis        r3,0x0040     # multiply factor from 4MHZ at CLK4
+# Set the ADS board to 16MHz from 4MHZ clock at CLK4
+#        lis        r3,0x0030     # multiply factor from 4MHZ at CLK4
 #
 ##############################################################################
 	
@@ -778,7 +778,7 @@ ClockSource:
 	b	SetPLL
 
 Crystal:
-#Set the ADS board to 24MHz from 32.768 KHZ
+# Set the ADS board to 24MHz from 32.768 KHZ
 .if TARGET_SYSTEM_FREQUENCY ==  24
 	lis	r3,0x2dc0         # multiply factor from 32.768KHZ
 .endif # TARGET_SYSTEM_FREQUENCY ==  24
@@ -790,21 +790,21 @@ SetPLL:
 
 ##############################################################################
 #
-#System Interface Unit(SIU) Registers Programming
-#-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
+# System Interface Unit (SIU) Registers Programming
+# -------------------------------------------------
 #
 ##############################################################################
 
 ##############################################################################
 #
-#Initialize the SIU Configuration Register(SIUMCR)
+# Initialize the SIU Configuration Register (SIUMCR)
 #
 ##############################################################################
 
 .if __MOT_ADS__
 	lwz        r3,SIUMCR(r4) 	#  SIUMCR = The old value bitwize
-#ored with 0x00032640
-#For MPC 821 ADS, 25MHz
+	                     		#           ored with 0x00032640
+	                     		#  For MPC 821 ADS, 25MHz
 	addis      r5,r0,0x0003
 	ori        r5,r5,0x2640
 	or         r3,r3,r5
@@ -819,20 +819,20 @@ SetPLL:
 
 ##############################################################################
 #
-#Initialize the SIU Interrupt Edge Level Mask Register(SIEL)
+# Initialize the SIU Interrupt Edge Level Mask Register (SIEL)
 #
 ##############################################################################
 
 .if __MOT_MBX__ || __MOT_MBX_A__
 	lis			r3,0xAAAA	#  SEIL = 0xAAAA0000
-#For MBX860 - 003, 40MHz 
+						    #  For MBX860-003, 40MHz 
 	ori			r3,r3,0x0000
 	stw			r3,SIEL(r4)
 .endif
 
 ##############################################################################
 #
-#Initialize the Transfer Error Status Register(TESR)
+# Initialize the Transfer Error Status Register (TESR)
 #
 ##############################################################################
 
@@ -844,7 +844,7 @@ SetPLL:
 
 ##############################################################################
 #
-#Initialize the SDMA Configuration Register(SDCR)
+# Initialize the SDMA Configuration Register (SDCR)
 #
 ##############################################################################
 
@@ -856,25 +856,25 @@ SetPLL:
 
 ##############################################################################
 #
-#Initialize the Timebase Status and Control Register(TBSCR)
+# Initialize the Timebase Status and Control Register (TBSCR)
 #
 ##############################################################################
 
-#li r3, 0x00c2 #TBSCR = 0x00c2(16bit register)
-#sth r3, TBSCR(r4)
+#	li         r3,0x00c2	#  TBSCR = 0x00c2 (16bit register)
+#	sth        r3,TBSCR(r4)
 
 ##############################################################################
 #
-#Initialize the Real - Time Clock Status and Control Register(RTCSC)
+# Initialize the Real-Time Clock Status and Control Register (RTCSC)
 #
 ##############################################################################
 
-#li r3, 0x01c2 #RTCSC = 0x01c2(16bit register)
-#sth r3, RTCSC(r4)
+#	li         r3,0x01c2    #  RTCSC = 0x01c2 (16bit register)
+#	sth        r3,RTCSC(r4)
 
 ##############################################################################
 #
-#Initialize the Periodic Interrupt and Control Register(PISCR)
+# Initialize the Periodic Interrupt and Control Register (PISCR)
 #
 ##############################################################################
 
@@ -883,21 +883,21 @@ SetPLL:
 
 
 ##############################################################################
-#Cache Initialization
+# Cache Initialization
 #
-#Function : CacheInit
-#If the Data cache is                 enabled, flush then
-#disable it so we can finish the rest of initialization
+# Function: CacheInit
+#       If the Data cache is enabled, flush then
+#       disable it so we can finish the rest of initialization
 #
-#Input Registers:
-#R8 contains the content of DC_CST before entering
-#usr_init()
+# Input Registers:
+#       R8 contains the content of DC_CST before entering
+#          usr_init()
 #
-#Output Registers:
-#R3, R4, R5 and R6 will be destroyed
+# Output Registers:
+#       R3, R4, R5 and R6 will be destroyed
 #
-#History:
-# 10 / 7 / 95 lvn Initial porting from Arnewsh monitor
+# History:
+# 10/7/95      lvn      Initial porting from Arnewsh monitor
 #
 #
 ##############################################################################
@@ -906,7 +906,7 @@ SetPLL:
     .global     CacheInit
 CacheInit:
 
-#If Instruction cache was enabled, disable and invalidate all
+# If Instruction cache was enabled, disable and invalidate all
 ICacheInit:
     mfspr   r3,IC_CST       # read I-cache CSR 
     andis.  r3,r3,CacheEnableBit
@@ -927,9 +927,9 @@ ICacheInv:
     isync
 
 #ICacheEnable:
-#lis r3, CacheEnableCmd
-#mtspr r3, IC_CST #Enable Icache
-#isync
+#   lis     r3,CacheEnableCmd
+#   mtspr   r3,IC_CST       # Enable Icache
+#   isync
 
 DCacheInit:
 DCacheUnlock:
@@ -942,7 +942,7 @@ DCacheUnlock:
 
 DCacheFlushAll:
     li      r3,0            # Read 1 word per cache line
-#for 800 lines
+                            # for 800 lines
     li      r4,256          # 2 ways, 128 sets per way
 DCacheFlushLoop:
     addic.  r4,r4,-1        # decrementer, set cc bit
@@ -962,15 +962,15 @@ DCacheInv:
     mtspr   DC_CST,r3       # Invalidate Dcache
 
 #DCacheEnable:
-#lis r3, CacheEnableCmd
-#sync
-#mtspr DC_CST, r3 #Enable Icache
+#   lis     r3,CacheEnableCmd
+#   sync
+#   mtspr   DC_CST,r3       # Enable Icache
 
 	blr
 
 ##############################################################################
 #
-#UPM Table
+# UPM Table
 #
 ##############################################################################
 
@@ -979,89 +979,89 @@ DCacheInv:
 
 ##############################################################################
 #
-#UPM contents for the default ADS memory configuration:
+# UPM contents for the default ADS memory configuration:
 #
 ##############################################################################
 
 .if __MOT_ADS__
 UpmATable:
-#/* DRAM 70ns - single read. (offset 0 in upm RAM) */
+# /* DRAM 70ns - single read. (offset 0 in upm RAM) */
         .long      0x0fffcc24, 0x0fffcc04, 0x0cffcc04
         .long      0x00ffcc04, 0x00ffcc00, 0x37ffcc47
-#/* offsets 6-7 not used */
+# /* offsets 6-7 not used */
         .long      0xffffffff, 0xffffffff
-#/* DRAM 70ns - burst read. (offset 8 in upm RAM) */
+# /* DRAM 70ns - burst read. (offset 8 in upm RAM) */
         .long      0x0fffcc24, 0x0fffcc04, 0x08ffcc04, 0x00ffcc04
         .long      0x00ffcc08, 0x0cffcc44, 0x00ffec0c, 0x03ffec00
         .long      0x00ffec44, 0x00ffcc08, 0x0cffcc44, 0x00ffec04
         .long      0x00ffec00, 0x3fffec47
-#/* offsets 16-17 not used */
+# /* offsets 16-17 not used */
         .long      0xffffffff, 0xffffffff
-#/* DRAM 70ns - single write. (offset 18 in upm RAM) */
+# /* DRAM 70ns - single write. (offset 18 in upm RAM) */
         .long      0x0fafcc24, 0x0fafcc04, 0x08afcc04, 0x00afcc00, 0x37ffcc47
-#/* offsets 1d-1f not used */
+# /* offsets 1d-1f not used */
         .long      0xffffffff, 0xffffffff, 0xffffffff
-#/* DRAM 70ns - burst write. (offset 20 in upm RAM) */
+# /* DRAM 70ns - burst write. (offset 20 in upm RAM) */
         .long      0x0fafcc24, 0x0fafcc04, 0x08afcc00, 0x07afcc4c
         .long      0x08afcc00, 0x07afcc4c, 0x08afcc00, 0x07afcc4c
         .long      0x08afcc00, 0x37afcc47
-#/* offsets 2a-2f not used */
+# /* offsets 2a-2f not used */
         .long      0xffffffff, 0xffffffff, 0xffffffff
         .long      0xffffffff, 0xffffffff, 0xffffffff
-#/* refresh 70ns. (offset 30 in upm RAM) */
+# /* refresh 70ns. (offset 30 in upm RAM) */
         .long      0xe0ffcc84, 0x00ffcc04, 0x00ffcc04, 0x0fffcc04
         .long      0x7fffcc04, 0xffffcc86, 0xffffcc05
-#/* offsets 37-3b not used */
+# /* offsets 37-3b not used */
         .long      0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff
-#/* exception. (offset 3c in upm RAM) */
+# /* exception. (offset 3c in upm RAM) */
         .long      0x33ffcc07
-#/* offset 3d-3f not used */
+# /* offset 3d-3f not used */
         .long      0xffffffff, 0xffffffff, 0x40004650
 UpmATableEnd:
 
 UpmBTable:
-#/* SDRAM - single read. (offsets 0x00-0x07 in upm RAM (3-4 not used)) */
+# /* SDRAM - single read. (offsets 0x00-0x07 in upm RAM (3-4 not used)) */
         .long      0x0126cc04, 0x0fb98c00, 0x1ff74c45, 0xffffffff
         .long      0xffffffff, 0x1fe77c34, 0xefaabc34, 0x1fa57c35
-#/* SDRAM - burst read. (offsets 0x08-0x17 in upm RAM) */
+# /* SDRAM - burst read. (offsets 0x08-0x17 in upm RAM) */
         .long      0x0026fc04, 0x10adfc00, 0xf0affc00, 0xf1affc00
         .long      0xefbbbc00, 0x1ff77c45
-#/* offsets 0x0e-0x17 not used */
+# /* offsets 0x0e-0x17 not used */
         .long      0xffffffff, 0xffffffff
         .long      0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff
         .long      0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff
-#/* SDRAM - single write. (offsets 0x18-0x1f in upm RAM) */
+# /* SDRAM - single write. (offsets 0x18-0x1f in upm RAM) */
         .long      0x0e26bc04, 0x01b93c00, 0x1ff77c45
-#/* offsets 0x1b-0x1f not used */
+# /* offsets 0x1b-0x1f not used */
         .long      0xffffffff
         .long      0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff
-#/* SDRAM - burst write. (offsets 0x20-0x2f in upm RAM) */
+# /* SDRAM - burst write. (offsets 0x20-0x2f in upm RAM) */
         .long      0x0e26bc00, 0x10ad7c00, 0xf0affc00, 0xf0affc00
         .long      0xe1bbbc04, 0x1ff77c45
-#/* offsets 0x26-0x2f not used */
+# /* offsets 0x26-0x2f not used */
         .long      0xffffffff, 0xffffffff
         .long      0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff
         .long      0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff
-#/* refresh (offsets 0x30-0x3b in upm RAM) */
+# /* refresh (offsets 0x30-0x3b in upm RAM) */
         .long      0x1ff5fc84, 0xfffffc04, 0xfffffc84, 0xfffffc05
-#/* offsets 0x34-0x3b not used */
+# /* offsets 0x34-0x3b not used */
         .long      0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff
         .long      0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff
-#/* exception. (offsets 0x3c-0x3f in upm RAM) */
+# /* exception. (offsets 0x3c-0x3f in upm RAM) */
         .long      0x7ffffc07
-#/* offset 3d-3f not used */
+# /* offset 3d-3f not used */
         .long      0xffffffff, 0xffffffff, 0xffffffff
 UpmBTableEnd:
 .endif
 
 .if __MOT_MBX__ || __MOT_MBX_A__
 UpmATable:
-#/* DRAM 60ns - single read. (offset 0 in upm RAM) */
+# /* DRAM 60ns - single read. (offset 0 in upm RAM) */
         .long      0xEFFFE004, 0x0FFFE004, 0x0EEFAC04
         .long      0x00AF2C04, 0x03AF2C08, 0xFFFFEC07
         .long	   0xFFFFEC07, 0xFFFFEC07
 
-#/* DRAM 60ns - burst read. (offset 8 in upm RAM) */
+# /* DRAM 60ns - burst read. (offset 8 in upm RAM) */
         .long      0xEFFFE004, 0x0FFFE004, 0x0EEFAC04
         .long      0x00AF2C04, 0x03AF2C08, 0x0CAF2C04
         .long      0x00AF2C04, 0x03AF2C08, 0x0CAF2C04
@@ -1069,12 +1069,12 @@ UpmATable:
 		.long      0x00AF2C04, 0x03AF2C08, 0xFFFFEC07
 		.long      0xFFFFEC07
 
-#/* DRAM 60ns - single write. (offset 18 in upm RAM) */
+# /* DRAM 60ns - single write. (offset 18 in upm RAM) */
    		.long      0xEFFFE004, 0x0FFFA004, 0x0EFF2C04
    		.long      0x00FF2C00, 0xFFFFEC07, 0xFFFFEC07
    		.long      0xFFFFEC07, 0xFFFFEC07
 
-#/* DRAM 60ns - burst write. (offset 20 in upm RAM) */
+# /* DRAM 60ns - burst write. (offset 20 in upm RAM) */
    		.long      0xEFFFE004, 0x0FFFA004, 0x0EFF2C04
    		.long      0x00FF2C00, 0x0FFF2C0C, 0x0CFF2C00
    		.long      0x03FF2C0C, 0x0CFF2C00, 0x03FF2C0C
@@ -1082,13 +1082,13 @@ UpmATable:
    		.long      0xFFFFEC07, 0xFFFFEC07, 0xFFFFEC07
    		.long      0xFFFFEC07
 
-#/* refresh 60ns. (offset 30 in upm RAM) */
+# /* refresh 60ns. (offset 30 in upm RAM) */
   		.long      0xF0FFEC04, 0x00FFEC04, 0x0FFFEC04
   		.long      0x0FFFEC04, 0xFFFFEC07, 0xFFFFEC07
   		.long      0xFFFFEC07, 0xFFFFEC07, 0xFFFFEC07
   		.long      0xFFFFEC07, 0xFFFFEC07, 0xFFFFEC07
-
-#/* exception. (offset 3c in upm RAM) */
+ 
+# /* exception. (offset 3c in upm RAM) */
   		.long      0xFFFFEC07, 0xFFFFEC07, 0xFFFFEC07
   		.long      0xFFFFEC07
 UpmATableEnd:
@@ -1097,7 +1097,7 @@ UpmATableEnd:
 
 ##############################################################################
 #
-#soft_reset
+# soft_reset
 #
 ##############################################################################
     .section        .init,4,1,6
@@ -1115,3 +1115,5 @@ soft_reset:
 	sync
 	blr
 endfile:
+
+

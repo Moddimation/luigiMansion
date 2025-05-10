@@ -1,0 +1,81 @@
+/*  Metrowerks Standard Library  */
+
+/*  $Date: 1999/07/30 00:00:25 $ 
+ *  $Revision: 1.7.4.1 $ 
+ *  $NoKeywords: $ 
+ *
+ *		Copyright 1995-1999 Metrowerks, Inc.
+ *		All rights reserved.
+ */
+
+/*
+ *	cassert        hh  971206 filename used to be assert.h
+ */
+
+
+#include <ansi_parms.h>
+
+#ifndef RC_INVOKED
+
+#	pragma options align=native
+
+#	if defined(__CFM68K__) && !defined(__USING_STATIC_LIBS__)
+#		pragma import on
+#	endif
+
+#	ifdef assert		/* hh  980901 */
+#		undef assert
+#	endif
+
+#	if defined(__cplusplus) && defined(_MSL_USING_NAMESPACE)       /* hh  971206 */
+		namespace std {}
+#	endif
+
+#	ifdef NDEBUG
+
+#		define assert(condition) ((void) 0)
+
+#	else
+
+#		ifndef __cassert__
+#			define	__cassert__
+
+#			ifdef __cplusplus       /* hh  971206 */
+				extern "C" {
+#			endif
+
+#			ifdef UNICODE      /* defines of assert(condition) moved outside #ifndef __cassert__ mm980724 */
+  				void  __wchar_assertion_failed(wchar_t const *condition, char const *testfilename, int lineno); /* mm 990415 */
+#			else
+  				void  __assertion_failed(char const *condition, char const *testfilename, int lineno);			/* mm 990415 */
+#			endif
+
+#			ifdef __cplusplus       /* hh  971206 */
+				}
+#			endif
+
+#		endif /* __cassert__ */
+
+#		ifdef UNICODE	  /* moved here from inside #ifndef __cassert__ mm980724 */
+#			define assert(condition) ((condition) ? ((void) 0) : __wchar_assertion_failed( L#condition, __FILE__, __LINE__))
+#		else
+#			define assert(condition) ((condition) ? ((void) 0) : __assertion_failed(#condition,__FILE__, __LINE__))
+#		endif
+
+#	endif /* def NDEBUG */
+
+#	if defined(__CFM68K__) && !defined(__USING_STATIC_LIBS__)
+#		pragma import reset
+#	endif
+
+#	pragma options align=reset
+
+#endif /* RC_INVOKED */
+
+/*     Change record
+ * hh  971206 Changed filename from assert.h to cassert and added namespace support
+ * hh 971230 added RC_INVOKED wrapper
+ * mm 980724  Moved defines of assert(condition) outside __cassert__ wrappers MW08171
+ * hh 980901  Indented, and added assert existence test before undef'ing
+ * mm 990415  Inserted const into prototype definitions to avoid warnings when #pragma const_strings on in force IL9903-1579	
+ */

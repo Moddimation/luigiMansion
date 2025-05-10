@@ -235,7 +235,7 @@ cflags_base = [
     "-enum int",
     "-fp hardware",
     "-Cpp_exceptions off",
-    # "-W all",
+    "-W all", # Oll Korrect
     '-pragma "cats off"',
     '-pragma "warn_notinlined off"',
     "-maxerrors 1",
@@ -248,7 +248,6 @@ cflags_base = [
     "-i decomp/CodeWarrior/**/Inc",
     f"-i {config.build_dir}/{config.version}/include",
     f"-DVERSION_{config.version}",
-    "-D__GEKKO__"
 ]
 
 # Debug flags

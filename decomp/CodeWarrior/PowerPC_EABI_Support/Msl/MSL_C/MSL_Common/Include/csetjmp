@@ -1,0 +1,158 @@
+/*  Metrowerks Standard Library  */
+
+/*  $Date: 1999/07/30 18:07:48 $ 
+ *  $Revision: 1.9.4.3 $ 
+ *  $NoKeywords: $ 
+ *
+ *		Copyright 1995-1999 Metrowerks, Inc.
+ *		All rights reserved.
+ */
+
+/*
+ *	File:				csetjmp        hh  971206  filename used to be setjmp.h
+ *
+ *	Content:		Interface to setjmp/longjmp ANSI functions ...
+ */
+
+#ifndef __csetjmp__
+#define __csetjmp__
+
+#include <ansi_parms.h>
+
+#ifndef RC_INVOKED   /* hh 971230 */
+
+#pragma options align=native
+#if defined(__CFM68K__) && !defined(__USING_STATIC_LIBS__)
+	#pragma import on
+#endif
+/* #pragma direct_destruction off */  /*  980807 vss */
+
+#ifdef __cplusplus           /* hh  971206 */
+	#ifdef _MSL_USING_NAMESPACE
+		namespace std {
+	#endif
+	extern "C" {
+#endif
+
+
+#if __POWERPC__ 
+          
+	#if __VEC__
+		typedef __vector unsigned long jmp_buf[29];
+		#define setjmp(jmp_buf)	__std(__vec_setjmp(jmp_buf))  /* hh 990521 */
+	#else
+		typedef long *jmp_buf[70];
+		#define setjmp(jmp_buf)	__std(__setjmp(jmp_buf))  /* hh 990521 */
+	#endif
+	
+#elif __MIPS__
+
+	#include <__config.h>
+	typedef struct __jmp_buf 
+	{
+		_REG_TYPE	GPR[11];
+		#if __fpu__
+			_FREG_TYPE	FPR[12];
+		#endif
+	} __jmp_buf;
+	typedef struct __jmp_buf jmp_buf;
+    void __longjmp(register __jmp_buf* env, int val);
+    int  __setjmp (register __jmp_buf* env);
+  	#define setjmp(jmp_buf)	__std(__setjmp(&jmp_buf))  /* hh 990521 */
+	#define longjmp(env, val) __longjmp(&env,val)
+	
+#elif	__INTEL__
+
+	typedef int jmp_buf[10];
+	#define setjmp(jmp_buf) __std(_Setjmp(jmp_buf))  /* hh 990521 */
+	int _Setjmp(jmp_buf);
+	
+#else
+
+	typedef long *jmp_buf[13];			/*	D3-D7,PC,A2-A6,SP,__local_destructor_chain */
+
+#endif
+
+#if __POWERPC__
+
+#ifndef __SETJMP_NOT_INTERNAL__
+#pragma internal on
+#endif
+
+#if __VEC__
+	int		__vec_setjmp(jmp_buf);
+#else
+	int		__setjmp(jmp_buf);
+#endif	
+	
+#ifndef __SETJMP_NOT_INTERNAL__
+#pragma internal reset
+#endif
+
+#if __VEC__
+	#define longjmp(jmp_buf, val) __vec_longjmp(jmp_buf, val)
+	int		__vec_longjmp(jmp_buf, int);
+#else
+	void	longjmp (jmp_buf,int);
+#endif
+
+#elif __CFM68K__
+
+ #ifndef __SETJMP_NOT_INTERNAL__
+ #pragma internal on
+ #endif
+ 
+	int		setjmp(jmp_buf);
+	
+ #ifndef __SETJMP_NOT_INTERNAL__
+ #pragma internal reset
+ #endif
+ 
+	void	longjmp(jmp_buf,int);
+
+#else
+
+#ifndef __MIPS__
+	int		setjmp (jmp_buf);
+	void	longjmp(jmp_buf,int);
+#endif	
+
+#endif
+
+void __longjmp_ldestr(jmp_buf,int);
+
+#if __dest_os == __be_os
+	typedef long *sigjmp_buf[(sizeof(jmp_buf)/sizeof(int)) + (32*4)];      /* mm 970708 */
+	int  sigsetjmp(sigjmp_buf jmp, int savemask);                          /* mm 970708 */
+    void siglongjmp(sigjmp_buf jmp, int val);                              /* mm 970708 */
+#endif
+
+#ifdef __cplusplus          /* hh  971206 */
+	}
+	#ifdef _MSL_USING_NAMESPACE
+		}
+	#endif
+#endif
+
+/* #pragma direct_destruction reset */  /* vss 980807 */
+#if defined(__CFM68K__) && !defined(__USING_STATIC_LIBS__)
+	#pragma import reset
+#endif
+#pragma options align=reset
+
+#endif /* RC_INVOKED */
+
+#endif
+
+/*     Change record
+ * 960829 bkoz added l.you's changes for powerTV
+ * 960917 KO: Moved the __extern_c block up here so it now encloses
+           the Intel function declaration.
+ * mm 970708  Inserted Be changes
+ * hh  971206 Changed filename from setjmp.h to csetjmp and added namespace support.
+ * hh 971230 added RC_INVOKED wrapper
+ * vss 980807 remove pragma  - no longer supported by compiler
+ * vss 990115 removed powerTV wrappers
+ * bdd 00-2-3 Add AltiVec changes (contributed)
+ * hh 990521 added __std() qualifier to setjmp macro, 4 places
+ */

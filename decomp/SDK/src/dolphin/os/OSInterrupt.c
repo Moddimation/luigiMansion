@@ -1,5 +1,7 @@
 #include <dolphin/os.h>
 
+#include <string.h>
+
 #include "OSPrivate.h"
 
 static ASM void ExternalInterruptHandler (register __OSException exception,
@@ -30,11 +32,12 @@ static OSInterruptMask InterruptPrioTable[] = {
 
 #if DEBUG
 char* __OSInterruptNames[33] = {
-    "MEM_0",     "MEM_1",     "MEM_2",     "MEM_3",    "MEM_ADDRESS", "DSP_AI",       "DSP_ARAM",
-    "DSP_DSP",   "AI_AI",     "EXI_0_EXI", "EXI_0_TC", "EXI_0_EXT",   "EXI_1_EXI",    "EXI_1_TC",
-    "EXI_1_EXT", "EXI_2_EXI", "EXI_2_TC",  "PI_CP",    "PI_PE_TOKEN", "PI_PE_FINISH", "PI_SI",
-    "PI_DI",     "PI_RSW",    "PI_ERROR",  "PI_VI",    "PI_DEBUG",    "PI_HSP",       "unknown",
-    "unknown",   "unknown",   "unknown",   "unknown",  "unknown"
+    "MEM_0",       "MEM_1",        "MEM_2",     "MEM_3",     "MEM_ADDRESS", "DSP_AI",
+    "DSP_ARAM",    "DSP_DSP",      "AI_AI",     "EXI_0_EXI", "EXI_0_TC",    "EXI_0_EXT",
+    "EXI_1_EXI",   "EXI_1_TC",     "EXI_1_EXT", "EXI_2_EXI", "EXI_2_TC",    "PI_CP",
+    "PI_PE_TOKEN", "PI_PE_FINISH", "PI_SI",     "PI_DI",     "PI_RSW",      "PI_ERROR",
+    "PI_VI",       "PI_DEBUG",     "PI_HSP",    "unknown",   "unknown",     "unknown",
+    "unknown",     "unknown",      "unknown"
 };
 
 char* __OSPIErrors[8] = {
@@ -354,10 +357,7 @@ OSSetInterruptMask (OSInterruptMask local)
     prev = *(OSInterruptMask*)OSPhysicalToCached (0x00C8);
     mask = (global | prev) ^ local;
     *(OSInterruptMask*)OSPhysicalToCached (0x00C8) = local;
-    while (mask)
-    {
-        mask = SetInterruptMask (mask, global | local);
-    }
+    while (mask) { mask = SetInterruptMask (mask, global | local); }
     OSRestoreInterrupts (enabled);
     return prev;
 }
@@ -376,10 +376,7 @@ __OSMaskInterrupts (OSInterruptMask global)
     mask = ~(prev | local) & global;
     global |= prev;
     *(OSInterruptMask*)OSPhysicalToCached (0x00C4) = global;
-    while (mask)
-    {
-        mask = SetInterruptMask (mask, global | local);
-    }
+    while (mask) { mask = SetInterruptMask (mask, global | local); }
     OSRestoreInterrupts (enabled);
     return prev;
 }
@@ -398,10 +395,7 @@ __OSUnmaskInterrupts (OSInterruptMask global)
     mask = (prev | local) & global;
     global = prev & ~global;
     *(OSInterruptMask*)OSPhysicalToCached (0x00C4) = global;
-    while (mask)
-    {
-        mask = SetInterruptMask (mask, global | local);
-    }
+    while (mask) { mask = SetInterruptMask (mask, global | local); }
     OSRestoreInterrupts (enabled);
     return prev;
 }
@@ -409,6 +403,8 @@ __OSUnmaskInterrupts (OSInterruptMask global)
 void
 __OSDispatchInterrupt (__OSException exception, OSContext* context)
 {
+#pragma unused(exception)
+
     u32                  intsr;
     u32                  reg;
     OSInterruptMask      cause;
@@ -566,7 +562,9 @@ __OSDispatchInterrupt (__OSException exception, OSContext* context)
     {
         OSReport ("PI ERROR\n");
         OSDumpContext (context);
-        OSReport ("\nPIESR = 0x%08x                  PIEAR  = 0x%08x\n", __PIRegs[7], __PIRegs[8]);
+        OSReport ("\nPIESR = 0x%08x                  PIEAR  = 0x%08x\n",
+                  __PIRegs[7],
+                  __PIRegs[8]);
         __PIRegs[0] = 1;
         OSReport ("PI Error = %s\n", __OSPIErrors[__PIRegs[7]]);
         OSReport ("Offending address = 0x%x (from PIEAR)\n", __PIRegs[8]);

@@ -14,6 +14,9 @@ static OSTime HoldDown;
 void
 __OSResetSWInterruptHandler (__OSInterrupt exception, OSContext* context)
 {
+#pragma unused(exception)
+#pragma unused(context)
+
     OSResetCallback callback;
 
     HoldDown = __OSGetSystemTime();

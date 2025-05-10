@@ -126,10 +126,7 @@ CompleteTransfer (s32 chan)
             {
                 buf = exi->immBuf;
                 data = __EXIRegs[(chan * 5) + 4];
-                for (i = 0; i < len; i++)
-                {
-                    *buf++ = data >> ((3 - i) * 8);
-                }
+                for (i = 0; i < len; i++) { *buf++ = (u8)(data >> ((3 - i) * 8)); }
             }
         }
         exi->state &= ~STATE_BUSY;
@@ -165,10 +162,7 @@ EXIImm (s32 chan, void* buf, long len, u32 type, EXICallback callback)
     if (type != 0)
     {
         data = 0;
-        for (i = 0; i < len; i++)
-        {
-            data |= ((u8*)buf)[i] << ((3 - i) * 8);
-        }
+        for (i = 0; i < len; i++) { data |= ((u8*)buf)[i] << ((3 - i) * 8); }
         __EXIRegs[(chan * 5) + 4] = data;
     }
     exi->immBuf = buf;
@@ -228,7 +222,7 @@ EXIDma (s32 chan, void* buf, long len, u32 type, EXICallback callback)
     }
     exi->state |= STATE_DMA;
     __EXIRegs[(chan * 5) + 1] = (u32)buf & 0x03FFFFE0;
-    __EXIRegs[(chan * 5) + 2] = len;
+    __EXIRegs[(chan * 5) + 2] = (u32)len;
     __EXIRegs[(chan * 5) + 3] = (type * 4) | 3;
     OSRestoreInterrupts (enabled);
     return 1;
@@ -252,8 +246,8 @@ EXISync (s32 chan)
             if (exi->state & STATE_SELECTED)
             {
                 CompleteTransfer (chan);
-                if (__OSGetDIConfig() != 0xFF || exi->immLen != 4 || __EXIRegs[chan * 5] & 0x70 ||
-                    __EXIRegs[(chan * 5) + 4] != 0x1010000)
+                if (__OSGetDIConfig() != 0xFF || exi->immLen != 4 ||
+                    __EXIRegs[chan * 5] & 0x70 || __EXIRegs[(chan * 5) + 4] != 0x1010000)
                 {
                     rc = TRUE;
                 }
@@ -354,7 +348,7 @@ EXIProbe (s32 chan)
 
             if (__gUnknown800030C0[chan] == 0U)
             {
-                __gUnknown800030C0[chan] = t;
+                __gUnknown800030C0[chan] = (u32)t;
             }
             if (t - (s32)__gUnknown800030C0[chan] < 3)
             {
@@ -458,8 +452,9 @@ EXISelect (s32 chan, u32 dev, u32 freq)
 
     enabled = OSDisableInterrupts();
     if ((exi->state & STATE_SELECTED) ||
-        ((chan != 2) && (((dev == 0) && !(exi->state & STATE_ATTACHED) && (EXIProbe (chan) == 0)) ||
-                         !(exi->state & STATE_LOCKED) || (exi->dev != dev))))
+        ((chan != 2) &&
+         (((dev == 0) && !(exi->state & STATE_ATTACHED) && (EXIProbe (chan) == 0)) ||
+          !(exi->state & STATE_LOCKED) || (exi->dev != dev))))
     {
         OSRestoreInterrupts (enabled);
         return 0;
@@ -674,7 +669,7 @@ EXIUnlock (s32 chan)
         unlockedCallback = exi->queue[0].callback;
         if (--exi->items > 0)
         {
-            memmove (&exi->queue[0], &exi->queue[1], exi->items * 8);
+            memmove (&exi->queue[0], &exi->queue[1], (u32)(exi->items * 8));
         }
         unlockedCallback (chan, 0);
     }

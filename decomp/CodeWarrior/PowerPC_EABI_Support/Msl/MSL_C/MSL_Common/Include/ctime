@@ -1,0 +1,193 @@
+/*  Metrowerks Standard Library  */
+
+/*  $Date: 2000/10/30 22:24:02 $ 
+ *  $Revision: 1.13.4.1.4.1 $ 
+ *  $NoKeywords: $ 
+ *
+ *		Copyright 1995-1999 Metrowerks, Inc.
+ *		All rights reserved.
+ */
+
+/*
+ *	ctime       hh  971206  this used to be time.h
+ */
+
+#ifndef __ctime__
+#define __ctime__
+
+#include <ansi_parms.h>
+
+#include <null.h>
+#include <size_t.h>
+
+#ifndef RC_INVOKED   /* hh 971230 */
+
+#ifdef __cplusplus           /* hh  971206 */
+	#ifdef _MSL_USING_NAMESPACE
+		namespace std {
+	#endif
+	extern "C" {
+#endif
+
+#if macintosh && !defined(__dest_os)               /*MW-mm 960927a*/
+  #define __dest_os __mac_os                       /*MW-mm 960927a*/
+#endif                                             /*MW-mm 960927a*/
+
+/*
+ *		In order for __dest_os to be defined, the appropriate file
+ *		<ansi_prefix.*.h> must be #included before this file, if you
+ *		are on a mac and __dest_os is not defined __mac_os is set.
+ *		__dest_os is needed to determine the correct value for
+ *		CLOCKS_PER_SEC below.
+ */
+
+#pragma options align=native
+#if defined(__CFM68K__) && !defined(__USING_STATIC_LIBS__)
+	#pragma import on
+#endif
+
+#if __dest_os == __mac_os
+#include <timesize.mac.h>
+  #if defined(__TIMESIZE_DOUBLE__) 
+      #define CLOCKS_PER_SEC	1000000  /*  971222  jz  increase clock resolution */
+      typedef double clock_t;
+  #else
+      #define CLOCKS_PER_SEC	60
+      typedef unsigned long	clock_t;  
+  #endif
+
+#elif __dest_os == __be_os
+
+#define CLOCKS_PER_SEC	1000               /* mm 970708 */
+#define CLK_TCK         CLOCKS_PER_SEC
+
+#ifndef _CLOCK_T_DEFINED_                  /* mm 970708 */
+
+typedef long	clock_t;                   /* mm 970708 */
+
+#define _CLOCK_T_DEFINED_                  /* mm 970708 */
+#endif /* _CLOCK_T_DEFINED_ */             /* mm 970708 */
+
+void tzset(void);
+
+extern char *tzname[2];
+
+#elif (__dest_os == __win32_os || __dest_os == __wince_os)
+	
+	#define CLOCKS_PER_SEC	1000
+	#define CLK_TCK         CLOCKS_PER_SEC
+	typedef long	clock_t;	/* 961011 KO */
+
+#elif defined(__m56800__)				/* mm 981029 */									/* mm 981015 */
+/*
+ *			 !! WARNING !!
+ *	Based on 40MHZ crystal, 25 ns cycle, 2 cycles per tick
+ *
+ *		!! YOUR BOARD MAY BE DIFFERENT !!
+ */
+	typedef unsigned long clock_t;								/* mm 981015 */
+	#define CLOCKS_PER_SEC 20000000								/* mm 981015 */
+
+#elif __dest_os == __ppc_eabi && !defined(_No_Time_OS_Support)
+	
+	#if defined(_Generic_PPC_EABI_OS)
+		typedef unsigned long clock_t;
+		#define CLOCKS_PER_SEC	60
+	#endif
+
+#elif __dest_os == __n64_os								/* ad 1.28.99 */
+	typedef unsigned long clock_t;
+	#define CLOCKS_PER_SEC	1000000
+#elif __dest_os == __dolphin_os								/* sw 08.21.00 */
+	typedef long long clock_t;
+	#define CLOCKS_PER_SEC OS_TIMER_CLOCK
+#endif
+
+/* 960912 KO: Put the Win32 stuff inside an ifdef block. Changed it to long
+to match  Microsoft's definition of time_t.*/
+#ifndef _TIME_T_DEFINED
+	#if (__dest_os	== __win32_os  || __dest_os	== __wince_os)
+		typedef long time_t;
+	#else
+		typedef unsigned long	time_t;
+	#endif
+	#define _TIME_T_DEFINED 	/* avoid multiple def's of time_t */
+#endif
+
+struct tm {
+	int	tm_sec;
+	int	tm_min;
+	int	tm_hour;
+	int	tm_mday;
+	int	tm_mon;
+	int	tm_year;
+	int	tm_wday;
+	int	tm_yday;
+	int	tm_isdst;
+};
+
+#ifndef _No_Time_OS_Support
+clock_t			clock(void);
+#endif
+#ifndef _No_Floating_Point
+double			difftime(time_t time1, time_t time2);
+#endif
+time_t			mktime(struct tm * timeptr);
+time_t			time(time_t * timer);
+char *			asctime(const struct tm * timeptr);
+char *			ctime(const time_t * timer);
+struct tm *	gmtime(const time_t * timer);
+struct tm *	localtime(const time_t * timer);
+size_t			strftime(char * s, size_t maxsize, const char *
+format, const struct tm * timeptr);
+
+#ifndef _No_Time_OS_Support
+
+clock_t	__get_clock(void);
+time_t	__get_time(void);
+int			__to_gm_time(time_t * time);
+
+#endif
+
+#if (__dest_os	== __win32_os  || __dest_os	== __wince_os)
+
+	/* This #ifdef block contains declarations found in the corresponding */
+	/* Visual C++ ANSI header.		*/
+	/* This function is defined in extras.c */
+	char *_strdate(char *str);
+
+#endif
+
+#ifdef __cplusplus      /* hh  971206 */
+	}
+	#ifdef _MSL_USING_NAMESPACE
+		}
+	#endif
+#endif
+
+#if defined(__CFM68K__) && !defined(__USING_STATIC_LIBS__)
+	#pragma import reset
+#endif
+#pragma options align=reset
+
+#endif /* RC_INVOKED */
+
+#endif
+
+/*     Change record 
+MW-mm 960927a Inserted setting of __dest_os to __mac_os when not otherwise set.
+MW-mm 960927b Removed duplicate definition of time_t 
+960912 KO     Made typedef for Win32 time_t in accord with Microsoft's definition
+961011 KO     Made typedef for Win32 clock_t in accord with Microsoft's definition
+970620 FS	  Add line 65 for PPC 821 EABI
+970723 SCM	  Disabled difftime when _No_Floating_Point defined.
+			  Disabled OS-dependent functions when _No_Time_OS_Support defined.
+hh  971206    Changed file name from time.h to ctime and added namespace support.
+971222  jz    Increase clock resolution from a 60MHz clock to higher frequency supported
+            by O/S.
+hh 971230    added RC_INVOKED wrapper
+hh 980408   wrapped in #ifndef _No_Floating_Point
+mm 981015   added definitions for DSP56800
+mm 981029   changed __DSP568 to __m56800__
+ad 1.28.99 added nintendo support
+*/

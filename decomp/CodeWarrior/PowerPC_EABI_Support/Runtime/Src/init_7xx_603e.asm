@@ -1,225 +1,62 @@
-.globl usr_init
+	.globl		usr_init  
 
-    .extern init_board
+	.extern		init_board
 
-        MMCR0.equ 952 MMCR1.equ 956 ICTC.equ 1019 THRM1.equ 1020 THRM2.equ 1021 THRM3.equ 1022 L2CR
-    .equ 1017
+MMCR0			.equ		952
+MMCR1			.equ		956
+ICTC			.equ		1019
+THRM1			.equ		1020
+THRM2			.equ		1021
+THRM3			.equ		1022
+L2CR			.equ		1017
 
-    _7XX_VERSION.equ 0x0008;
-;
-bits 0..15 of PVR on 7xx
+_7XX_VERSION	.equ		0x0008		;; bits 0..15 of PVR on 7xx
 
-    .section.init,
-    4, 1, 6 .align 2 #align on word boundary
 
-    ;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-usr_init;
-;
-;
-;
-Initializes the 7xx or 603e processor to provide a reasonable;
-;
-initial state.;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
+	.section   .init,4,1,6
+	.align     2            	# align on word boundary
 
-usr_init :;
-;
-;
-;
-Initialize MSR :;
-;
-Reserved[0..12] = 0;
-;
-POW[13] = 0(power mgmt disabled);
-;
-TGPR[14] = 0(no temporary TGPR remapping (603e));
-;
-ILE[15] = 0(big - endian exception context);
-;
-EE[16] = 0(external interrupts disabled);
-;
-PR[17] = 0(supervisor level);
-;
-FP[18] = 1(floating point available);
-;
-ME[19] = 1(machine check exceptions enabled);
-;
-FE0[20] = 0(w / FE1->floating pt exceptions disabled);
-;
-SE[21] = 0(single - step trace disabled);
-;
-BE[22] = 0(branch trace disabled);
-;
-FE1[23] = 0(w / FE0->floating pt exceptions disabled);
-;
-Reserved[24] = 0;
-;
-IP[25] = 1(exception handler table at 0xfff00000);
-;
-IR[26] = 0(instruction address xlation disabled);
-;
-DR[27] = 0(data address xlation disabled);
-;
-Reserved[28] = 0;
-;	PM[29]			= 0 (not marked for performance monitor)
-	;
-;
-RI[30] = 0(exception state is not recoverable);
-;
-LE[31] = 0(big - endian);
-;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;	usr_init
+;;
+;;	Initializes the 7xx or 603e processor to provide a reasonable
+;;	initial state.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-addi r3, r0, 0x3040 mtmsr r3 sync
+usr_init:	
+	;;
+	;; Initialize MSR:
+	;;	Reserved[0..12]	= 0
+	;;	POW[13]			= 0 (power mgmt disabled)
+	;;	TGPR[14]		= 0 (no temporary TGPR remapping (603e))
+	;;	ILE[15]			= 0 (big-endian exception context)
+	;;	EE[16]			= 0 (external interrupts disabled)
+	;;	PR[17]			= 0 (supervisor level)
+	;;	FP[18]			= 1 (floating point available)
+	;;	ME[19]			= 1 (machine check exceptions enabled)
+	;;	FE0[20]			= 0 (w/FE1 -> floating pt exceptions disabled)
+	;;	SE[21]			= 0 (single-step trace disabled)
+	;;	BE[22]			= 0 (branch trace disabled)
+	;;	FE1[23]			= 0 (w/FE0 -> floating pt exceptions disabled)
+	;;	Reserved[24]	= 0
+	;;	IP[25]			= 1 (exception handler table at 0xfff00000)
+	;;	IR[26]			= 0 (instruction address xlation disabled)
+	;;	DR[27]			= 0 (data address xlation disabled)
+	;;	Reserved[28]	= 0
+	;;	PM[29]			= 0 (not marked for performance monitor)
+	;;	RI[30]			= 0 (exception state is not recoverable)
+	;;	LE[31]			= 0 (big-endian)
+	;;
 
-    ;
-;
-;
-;
-Initialize HID0 :;
-;	EMCP[0]			= 1 (allow MCP' to cause checkstop/machine check)
+	addi	r3, r0, 0x3040
+	mtmsr	r3
+	sync
+	
+	;;
+	;; Initialize HID0:
+	;;	EMCP[0]			= 1 (allow MCP' to cause checkstop/machine check)
 	;;	DBP[1]			= 0 (disable bus parity generation (7xx))
 	;;	EBA[2]			= 0 (prevent address parity checking)
 	;;	EBD[3]			= 0 (prevent data parity checking)
